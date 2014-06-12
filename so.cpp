@@ -60,10 +60,8 @@ int main(int argc, char *argv[]){
         if(argv[1][1]=='c')  // -c para circular
             metodo =2;
     }
-    pthread_t threadDispositivos[NDISPOSITIVOS];
     for(int x=0;x<NDISPOSITIVOS;x++){
         pthread_mutex_init(&mutexDispositivos[x], NULL);
-        pthread_create(&threadDispositivos[x],NULL,&fazIO,NULL);
         dispositosLivres[x]=true;
     }
     pthread_mutex_init(&mutexTabelaDeProcessos, NULL);
@@ -92,13 +90,14 @@ void printMemoria(){
 }
 
 void rodaProcesso(int p){
-    fprintf(stderr,"rodando processo %s, faltam %d\n",tabelaDeProcessos[p].nome,tabelaDeProcessos[p].tempoRestante);
+    //fprintf(stderr,"rodando processo %s, faltam %d\n",tabelaDeProcessos[p].nome,tabelaDeProcessos[p].tempoRestante);
     if(!tabelaDeProcessos[p].bloqueado){
         int acessosMemoria=rand()%10+1,tempo;
         if(rand()%100<50){ //50% de chance de fazer IO
             Requisicao req;
             req.processo=p;
             req.dispositivo=rand()%NDISPOSITIVOS;
+            fprintf(stderr,"%s requisitando dispositivo %d IO\n",tabelaDeProcessos[p].nome,req.dispositivo);
             pthread_mutex_lock(&mutexDoSpool);
             spool.push(req);
             pthread_mutex_unlock(&mutexDoSpool);
@@ -108,14 +107,17 @@ void rodaProcesso(int p){
         }
         tempo=min(tempo,tabelaDeProcessos[p].tempoRestante);  //Se o tempo que falta rodar for menor que o arbitrado
 
-        acessosMemoria=min(acessosMemoria,tempo); //Se não houver tempo para todos acessos, o numero de acessos feitos é o tempo (1 segundo por acesso)
+       /* acessosMemoria=min(acessosMemoria,tempo); //Se não houver tempo para todos acessos, o numero de acessos feitos é o tempo (1 segundo por acesso)
         for(int x=0;x<acessosMemoria;x++){
             acessaMemoria(p);
             printMemoria();
         }
         if(tempo>acessosMemoria){
             usleep (CONSTANTE*(tempo-acessosMemoria));  //dorme o tempo que sobrou
-        }
+        }*/
+        //###############################################################
+        //###PAMONHA DA MEMORIA COMENTADA PARA LEGIBILIDADE DOS PRINTS###
+        //###############################################################
         if(tabelaDeProcessos[p].tempoRestante > tempo)
             tabelaDeProcessos[p].tempoRestante-=tempo;
         else
@@ -123,6 +125,7 @@ void rodaProcesso(int p){
     }else{
         fprintf(stderr,"processo %s bloqueado\n",tabelaDeProcessos[p].nome);
     }
+    usleep(10000);
 }
 
 void acessaMemoria(int p){
@@ -165,28 +168,18 @@ void trocaPosicao(int p,int posicao){
 
 void *DMA(void* p){
     while(true){
-        printf("rodando thread do DMA\n");
         pthread_mutex_lock(&mutexDoSpool); //trava o mutex para ler o spool
         if(!spool.empty()){
             Requisicao req=spool.front();  //pega a primeira requisicao
             spool.pop();
             printf("leu requisicao do processo %s para o dispositivo %d\n",tabelaDeProcessos[req.processo].nome,req.dispositivo);
-
             if (pthread_mutex_trylock(&mutexDispositivos[req.dispositivo]) == 0 && usadosDMA<CAPACIDADEDMA){
-                pthread_mutex_lock(&mutexDispositivos[req.dispositivo]);
-                    fprintf(stderr,"dispositivo livre! Usando dispositivo.");
-                    int tempoDeUso=rand()%4+1;
-                    usadosDMA++;
-                    pthread_create(&threadUsaDispositivo[ultimaReq],NULL,&rodaEscalonador,NULL);
-                    while(!dispositosLivres[req.dispositivo]);
-                    fprintf(stderr,"%s terminou de usar dispositivo %d",tabelaDeProcessos[req.processo].nome,req.dispositivo);
-                pthread_mutex_unlock(&mutexDispositivos[req.dispositivo]);
+                pthread_create(&threadUsaDispositivo[ultimaReq],NULL,&fazIO,(void*)&req);  //se passou desse if o mutex já está bloqueado e pode tocar lata
+                usadosDMA++;
+                ultimaReq++;
             }else{
-                if(usadosDMA<CAPACIDADEDMA){
+                if(usadosDMA==CAPACIDADEDMA){
                     fprintf(stderr,"DMA cheio, sleepando.\n");
-                    pthread_mutex_unlock(&mutexDoSpool);
-                    usleep(CONSTANTE);
-                    pthread_mutex_lock(&mutexDoSpool);
                 }else{
                     fprintf(stderr,"dispositivo %d bloqueado :( movendo requisicao para o fim do spool \n",req.dispositivo);
                     spool.push(req);
@@ -202,16 +195,25 @@ void *DMA(void* p){
 
 void *fazIO(void *r){
     Requisicao* req=(Requisicao*) r;
-    int tempo=rand()%4+1;
-    usleep(CONSTANTE*tempo);
-    tabelaDeProcessos[req->processo].bloqueado=false;
+    int tempo=rand()%4+1;  //arbitra o tempo
+        fprintf(stderr,"dispositivo livre! %s Usando o dispositivo %d.\n",tabelaDeProcessos[req->processo].nome,req->dispositivo);
+        pthread_mutex_lock(&mutexTabelaDeProcessos);
+            tabelaDeProcessos[req->processo].bloqueado=true;  //bloqueia o processo
+        pthread_mutex_unlock(&mutexTabelaDeProcessos);
+        usleep(CONSTANTE*tempo);  //"faz" a entrda e saida  (não pode ser usleep se nao bloqueia in
+        pthread_mutex_lock(&mutexTabelaDeProcessos);
+            tabelaDeProcessos[req->processo].bloqueado=false;  //desbloqueia o processo
+        pthread_mutex_unlock(&mutexTabelaDeProcessos);
+        fprintf(stderr,"%s terminou de usar dispositivo %d\n",tabelaDeProcessos[req->processo].nome,req->dispositivo);
+    pthread_mutex_unlock(&mutexDispositivos[req->dispositivo]);  //libera o dispositivo
     pthread_mutex_lock(&mutexDoSpool);
-
+        usadosDMA--;
+    pthread_mutex_unlock(&mutexDoSpool);
+    pthread_exit(NULL);
 }
 
 void *rodaEscalonador(void *thread){
     while(!FINAL){
-        fprintf(stderr,"rodando escalonador\n");
         pthread_mutex_lock(&mutexTabelaDeProcessos);
         if(metodo==0)
             loteria();
@@ -230,7 +232,6 @@ void *rodaEscalonador(void *thread){
 void *criadorProcessos(void *processo){
     while(!FINAL){
         Processo temp;
-        printf("rodando escalonador de processos\n");
         scanf("%s %d",temp.nome,&temp.tempoTotal)   ;
 
         if(temp.tempoTotal==0){
@@ -289,6 +290,8 @@ void loteria(){
 }
 
 bool maiorPrioridade(Processo a,Processo b){
+    if(a.bloqueado) return false; //gambiarra medonha para por processos bloquados no final em vez de ficar tentando rodar eles e nao fazer nada
+    if(b.bloqueado) return true;
     return a.prioridade>b.prioridade;
 }
 
