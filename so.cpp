@@ -5,19 +5,6 @@ const int CONSTANTE=1000000;
 const int NMOLDURAS=8;
 const int NDISPOSITIVOS=8;
 
-
-void loteria();
-void escalonaPrioridade();
-void printBilhetes();
-void circular();
-void *rodaEscalonador(void *thread);
-void *criadorProcessos(void *processo);
-void apagaProcesso(int n);
-void trocaPosicao(int p,int posicao);
-void acessaMemoria(int p);
-void *fazIO(void *r);
-void *DMA(void* p);
-
 struct Processo{ //true=pronto false=bloqueado
     int tempoTotal,prioridade,tempoRestante,IDdoUsuario,IDprocesso;
     char nome[256];
@@ -26,15 +13,38 @@ struct Processo{ //true=pronto false=bloqueado
 };
 
 struct Moldura{
-    int processo;
+    int IDprocesso;
     int paginaDoProcesso;
     int idade;
 };
 
 struct Requisicao{
-    int processo;
+    int IDprocesso;
     int dispositivo;
 };
+
+void loteria();  //escalona os processos por loteria
+void printBilhetes();  // mostra os bilhetes que foram geradas para o escalonamento por loteria
+
+void escalonaPrioridade();
+void printPrioridades();  //mostra as prioridades arbitradas para cada processo
+bool maiorPrioridade(Processo a,Processo b);  //funcao auxiliar usada para ordenar os processos por prioridade
+
+void circular();
+
+void *rodaEscalonador(void *thread); //Thread que fica rodando o escalonador selecionado
+void *criadorProcessos(void *processo); //Thread que fica criando processos
+void rodaProcesso(int ID); //funcao que é chamada pelo escalonador, chama as funcoes de memoria e adiciona requisições no spool de IO
+void apagaProcesso(int ID);
+int findID(int ID); //retorna a posição no vector da ID requisitada
+
+void trocaPosicao(int ID,int posicao);  //bota a pagina selecionada na memoria
+void acessaMemoria(int ID);  //escolhe a pagina que vai ser usada e verifica se ela já está na memoria fisica
+
+void *fazIO(void *r);  //Thread que é criada para cada uso de recurso requisitado pelo DMA
+void *DMA(void* ID);  //Le as requisições do spool e atende elas se possivel
+
+
 
 vector <Processo> tabelaDeProcessos;
 Moldura molduras[NMOLDURAS];
@@ -75,7 +85,7 @@ int main(int argc, char *argv[]){
     pthread_create(&threadDMA,NULL,&DMA,NULL);
     FINAL = false;
     for(int x=0;x<NMOLDURAS;x++){
-        molduras[x].processo=-1;//inicializa as molduras de memoria como vazias
+        molduras[x].IDprocesso=-1;//inicializa as molduras de memoria como vazias
         molduras[x].paginaDoProcesso=-1;
     }
     while(!FINAL); //espera o fim da execução
@@ -84,18 +94,19 @@ int main(int argc, char *argv[]){
 
 void printMemoria(){
     for(int x=0;x<NMOLDURAS;x++){
-        fprintf(stderr,"% 2d(%d) ",molduras[x].processo,molduras[x].paginaDoProcesso);
+        fprintf(stderr,"% 2d(%d) ",molduras[x].IDprocesso,molduras[x].paginaDoProcesso);
     }
     fprintf(stderr,"\n");
 }
 
-void rodaProcesso(int p){
+void rodaProcesso(int ID){
+    int p=findID(ID);
     //fprintf(stderr,"rodando processo %s, faltam %d\n",tabelaDeProcessos[p].nome,tabelaDeProcessos[p].tempoRestante);
     if(!tabelaDeProcessos[p].bloqueado){
         int acessosMemoria=rand()%10+1,tempo;
         if(rand()%100<50){ //50% de chance de fazer IO
             Requisicao req;
-            req.processo=p;
+            req.IDprocesso=ID;
             req.dispositivo=rand()%NDISPOSITIVOS;
             fprintf(stderr,"%s requisitando dispositivo %d IO\n",tabelaDeProcessos[p].nome,req.dispositivo);
             pthread_mutex_lock(&mutexDoSpool);
@@ -109,7 +120,7 @@ void rodaProcesso(int p){
 
        /* acessosMemoria=min(acessosMemoria,tempo); //Se não houver tempo para todos acessos, o numero de acessos feitos é o tempo (1 segundo por acesso)
         for(int x=0;x<acessosMemoria;x++){
-            acessaMemoria(p);
+            acessaMemoria(ID);
             printMemoria();
         }
         if(tempo>acessosMemoria){
@@ -121,29 +132,31 @@ void rodaProcesso(int p){
         if(tabelaDeProcessos[p].tempoRestante > tempo)
             tabelaDeProcessos[p].tempoRestante-=tempo;
         else
-            apagaProcesso(p);
+            apagaProcesso(ID);
     }else{
         fprintf(stderr,"processo %s bloqueado\n",tabelaDeProcessos[p].nome);
     }
     usleep(10000);
 }
 
-void acessaMemoria(int p){
+void acessaMemoria(int ID){
+    int p = findID(ID);
     int posicao = rand()%tabelaDeProcessos[p].tabelaDePaginas.size()+1; //escolhe uma pagina da memoria virtual
     if(tabelaDeProcessos[p].tabelaDePaginas[posicao]==-1){
         fprintf(stderr,"posicão %d do processo %s não está na memoria, adicionando\n",posicao,tabelaDeProcessos[p].nome);
-        trocaPosicao(p,posicao);
+        trocaPosicao(ID,posicao);
     }else{
         fprintf(stderr,"posição %d do processo %s está na memoria\n",posicao,tabelaDeProcessos[p].nome);
     }
     usleep(CONSTANTE);
 }
 
-void trocaPosicao(int p,int posicao){
+void trocaPosicao(int ID,int posicao){
+    int p = findID(ID);
     int menor=0;
     bool breakou=false;
     for(int x=0;x<NMOLDURAS;x++){
-        if(molduras[x].processo==-1){
+        if(molduras[x].IDprocesso==-1){
             //fprintf(stderr,"encontrou espaco %d livre na memoria fisica\n",x);
             menor=x;
             breakou=true;
@@ -155,12 +168,12 @@ void trocaPosicao(int p,int posicao){
     }
     if(!breakou){
         //fprintf(stderr,"substituindo posição %d da memoria, processo atual nela = %d\n",menor,molduras[menor].processo);
-        tabelaDeProcessos[molduras[menor].processo].tabelaDePaginas[molduras[menor].paginaDoProcesso]=-1; //marca o espaço da tabela como livre
+        tabelaDeProcessos[molduras[menor].IDprocesso].tabelaDePaginas[molduras[menor].paginaDoProcesso]=-1; //marca o espaço da tabela como livre
     }
 
     mudancaMoldura++;
     molduras[menor].idade=mudancaMoldura;
-    molduras[menor].processo=p;
+    molduras[menor].IDprocesso=ID;
     molduras[menor].paginaDoProcesso=posicao;
     tabelaDeProcessos[p].tabelaDePaginas[posicao]=menor;
 
@@ -172,7 +185,7 @@ void *DMA(void* p){
         if(!spool.empty()){
             Requisicao req=spool.front();  //pega a primeira requisicao
             spool.pop();
-            printf("leu requisicao do processo %s para o dispositivo %d\n",tabelaDeProcessos[req.processo].nome,req.dispositivo);
+            printf("leu requisicao do processo %s para o dispositivo %d\n",tabelaDeProcessos[findID(req.IDprocesso)].nome,req.dispositivo);
             if (pthread_mutex_trylock(&mutexDispositivos[req.dispositivo]) == 0 && usadosDMA<CAPACIDADEDMA){
                 pthread_create(&threadUsaDispositivo[ultimaReq],NULL,&fazIO,(void*)&req);  //se passou desse if o mutex já está bloqueado e pode tocar lata
                 usadosDMA++;
@@ -196,15 +209,11 @@ void *DMA(void* p){
 void *fazIO(void *r){
     Requisicao* req=(Requisicao*) r;
     int tempo=rand()%4+1;  //arbitra o tempo
-        fprintf(stderr,"dispositivo livre! %s Usando o dispositivo %d.\n",tabelaDeProcessos[req->processo].nome,req->dispositivo);
-        pthread_mutex_lock(&mutexTabelaDeProcessos);
-            tabelaDeProcessos[req->processo].bloqueado=true;  //bloqueia o processo
-        pthread_mutex_unlock(&mutexTabelaDeProcessos);
+        fprintf(stderr,"dispositivo livre! %s Usando o dispositivo %d.\n",tabelaDeProcessos[findID(req->IDprocesso)].nome,req->dispositivo);
+        tabelaDeProcessos[findID(req->IDprocesso)].bloqueado=true;  //bloqueia o processo
         usleep(CONSTANTE*tempo);  //"faz" a entrda e saida  (não pode ser usleep se nao bloqueia in
-        pthread_mutex_lock(&mutexTabelaDeProcessos);
-            tabelaDeProcessos[req->processo].bloqueado=false;  //desbloqueia o processo
-        pthread_mutex_unlock(&mutexTabelaDeProcessos);
-        fprintf(stderr,"%s terminou de usar dispositivo %d\n",tabelaDeProcessos[req->processo].nome,req->dispositivo);
+        tabelaDeProcessos[findID(req->IDprocesso)].bloqueado=false;  //desbloqueia o processo
+        fprintf(stderr,"%s terminou de usar dispositivo %d\n",tabelaDeProcessos[findID(req->IDprocesso)].nome,req->dispositivo);
     pthread_mutex_unlock(&mutexDispositivos[req->dispositivo]);  //libera o dispositivo
     pthread_mutex_lock(&mutexDoSpool);
         usadosDMA--;
@@ -241,7 +250,7 @@ void *criadorProcessos(void *processo){
         temp.tempoRestante=temp.tempoTotal;
         temp.bloqueado=false;
         temp.prioridade=rand()%10+1;
-        temp.IDdoUsuario=id;
+        temp.IDprocesso=id;
         temp.tabelaDePaginas.resize(rand()%NMOLDURAS*2+1);  //arbitra o tamanho da memoria virtual do programa
         for(int x=0;x<temp.tabelaDePaginas.size();x++){
             temp.tabelaDePaginas[x]=-1; //marca todas como não estando na memoria;
@@ -286,7 +295,7 @@ void loteria(){
         }
     }
     fprintf(stderr,"escolheu bilhete %d proceso  %s\n",vaiRodar,tabelaDeProcessos[x].nome);
-    rodaProcesso(x);
+    rodaProcesso(tabelaDeProcessos[x].IDprocesso);
 }
 
 bool maiorPrioridade(Processo a,Processo b){
@@ -300,23 +309,34 @@ void escalonaPrioridade(){
     if(tabelaDeProcessos.size()!=0)
         for(int x=0;tabelaDeProcessos[x].prioridade==tabelaDeProcessos[0].prioridade && x<tabelaDeProcessos.size();x++){  //alterna entre todos de maior prioridade
             fprintf(stderr,"rodando %s\n",tabelaDeProcessos[x].nome);
-            rodaProcesso(x);
+            rodaProcesso(tabelaDeProcessos[x].IDprocesso);
         }
 }
 
 void circular(){
     for(int x=0;x<tabelaDeProcessos.size();x++){
-        rodaProcesso(x);
+        rodaProcesso(tabelaDeProcessos[x].IDprocesso);
     }
 }
 
-void apagaProcesso(int p){
+int findID(int ID){
+    for(int x=0;x<tabelaDeProcessos.size();x++){
+        if(tabelaDeProcessos[x].IDprocesso==ID)
+            return x;
+    }
+    return -1;
+}
+
+void apagaProcesso(int ID){
+    int p = findID(ID);
     fprintf(stderr,"%s terminou\n",tabelaDeProcessos[p].nome);
     totalDePrioridade-=tabelaDeProcessos[p].prioridade; //só serve para o loteria
     for(int x=0;x<NMOLDURAS;x++){  //marca as posicoes ocupadas pelo processo como livres(-1)
-        if(molduras[x].processo==p)
-            molduras[x].processo=-1;
+        if(molduras[x].IDprocesso==ID)
+            molduras[x].IDprocesso=-1;
     }
     printMemoria();
+    pthread_mutex_lock(&mutexTabelaDeProcessos);
     tabelaDeProcessos.erase(tabelaDeProcessos.begin()+p);
+    pthread_mutex_unlock(&mutexTabelaDeProcessos);
 }
