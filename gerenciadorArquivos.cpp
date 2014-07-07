@@ -1,4 +1,4 @@
-#include <bits/stdc++.h>
+    #include <bits/stdc++.h>
 using namespace std;
 
 const int blocosPorINode=7;
@@ -40,25 +40,28 @@ INode* getINode(int posicao);
 
 void mkdir(char * nomederp){
     int pos=findInodeLivre();
-    *getMapInode(pos)=false;
+    *getMapInode(pos)=true;
     INode* novo=getINode(pos);
     strcpy(novo->nome,nomederp);
     novo->diretorio=true;
     novo->pai=diretorioAtual;
-    //printf("criou diretorio %s durr\n",novo->nome);
-    printf("fim da funcao\n");
+    printf("criou diretorio %s\n",novo->nome);
 }
+
+
 char * geraArvoreDiretorio(){
     INode *temp=getINode(diretorioAtual);
-    string dir="/",nome;
-    printf("gerando string de nome: \n");
+    string dir="/";
+    string nome;
     while (temp->pai!=-1){
         printf("bugou aqui\n");
         nome=temp->nome;
         dir="/"+nome+"/"+dir;
         cout<<dir<<endl;
+        temp=getINode(temp->pai);
     }
-    return (char*) &(dir[0]);
+    char teste[]="teste";
+    return teste;//(char*) &(dir[0]);
 }
 
 bool* getMapInode(int posicao){
@@ -92,6 +95,7 @@ void criaSistemaDeArquivos(){
 int findInodeLivre(){
     for(int i=0;i<tamGerVazioInodes;i++){
         if(*getMapInode(i)==false){
+            printf("encontrou inode %d livre\n",i);
             return i;
         }
     }
@@ -132,16 +136,19 @@ int main(){
 
     //disco=(char)malloc(tamDisco);
     //disco=mmap
-    string entrada;
-    while(true){
-        printf("%s@Computador@%s: ",nomeUsuario,geraArvoreDiretorio());
-        cin>>entrada;
-        cout<<"leu entrada "<<entrada<<endl;
-        if(entrada=="mkdir"){
-            char nomePasta[]="nome asd ads adasd \n asdas\0";
+    char entrada[256];
+    char temp[]="mkdir";
+    int teste=10;
+    while(teste>0){
+        //printf("%s@Computador:~%s",nomeUsuario,geraArvoreDiretorio());  FIXME!!! nao sei pq mas quando tem isso fica num printf infinito
+        scanf(" %s",entrada);
+        printf("leu entrada %s\n",entrada);
+        if(strcmp(entrada,temp)==0){
+            char nomePasta[]="nome da pasta";
             printf("criando diretorio\n");
             mkdir(nomePasta);
         }
+        teste--;
     }
     printf("bugou aqui\n");
 }
