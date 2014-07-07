@@ -25,7 +25,7 @@ const int tamGerVazioBlocos = (tamEspacoBlocos - temp)/tamBloco;
 
 
 int INODESCRIADOS=0;
-INode * diretorioAtual;
+int diretorioAtual=0;
 char nomeUsuario[32];
 FILE *arquivo;
 char *disco;
@@ -34,19 +34,22 @@ bool *mapaBlocos;
 
 
 char * geraArvoreDiretorio();
+int findInodeLivre();
+bool* getMapInode(int posicao);
+INode* getINode(int posicao);
 
-char* getInput(){
-    char *entrada=(char*)malloc(512);
-    printf("%s@Computador@%s: ",nomeUsuario,geraArvoreDiretorio());
-    scanf("%s",entrada);
-    return entrada;
-}
-
-void mkdir(char*nome){
-
+void mkdir(char * nomederp){
+    int pos=findInodeLivre();
+    *getMapInode(pos)=false;
+    INode* novo=getINode(pos);
+    strcpy(novo->nome,nomederp);
+    novo->diretorio=true;
+    novo->pai=diretorioAtual;
+    //printf("criou diretorio %s durr\n",novo->nome);
+    printf("fim da funcao\n");
 }
 char * geraArvoreDiretorio(){
-    INode *temp=diretorioAtual;
+    INode *temp=getINode(diretorioAtual);
     string dir="/",nome;
     printf("gerando string de nome: \n");
     while (temp->pai!=-1){
@@ -74,19 +77,25 @@ void criaSistemaDeArquivos(){
     raiz->diretorio=true;
     time(&raiz->ultimaModificacao);
     raiz->pai=-1;
-    diretorioAtual=raiz;
+    diretorioAtual=0;
 
     for(int cont = 0; cont < tamGerVazioInodes; cont++){
         *getMapInode(cont) = false;
     }
+    printf("Gerou mapa de Inodes\n");
     for(int cont = 0; cont < tamGerVazioBlocos; cont++){
         *getMapBlocos(cont) = false;
     }
-    for(int x=0;x<tamGerVazioInodes;x++){
-        printf("%d ",*getMapInode(x));
-    }
-    printf("\n");
+    printf("gerou mapa de blocos\n");
+}
 
+int findInodeLivre(){
+    for(int i=0;i<tamGerVazioInodes;i++){
+        if(*getMapInode(i)==false){
+            return i;
+        }
+    }
+    printf("nao encontrou inode disponivel\n");
 }
 
 INode* getINode(int posicao){
@@ -110,8 +119,6 @@ int main(){
     printInfoDisco();
     printf("Bem vindo ao sistema de arquivos!\nInforme seu nome: ");
     scanf("%s",nomeUsuario);
-    char *entrada;
-
 
     arquivo=fopen("arquivo.bin","r+");
     if(arquivo==NULL){
@@ -125,10 +132,16 @@ int main(){
 
     //disco=(char)malloc(tamDisco);
     //disco=mmap
+    string entrada;
     while(true){
-        entrada=getInput();
-        printf("leu entrada %s\n",entrada);
+        printf("%s@Computador@%s: ",nomeUsuario,geraArvoreDiretorio());
+        cin>>entrada;
+        cout<<"leu entrada "<<entrada<<endl;
+        if(entrada=="mkdir"){
+            char nomePasta[]="nome asd ads adasd \n asdas\0";
+            printf("criando diretorio\n");
+            mkdir(nomePasta);
+        }
     }
     printf("bugou aqui\n");
-
 }
