@@ -1,7 +1,7 @@
     #include <bits/stdc++.h>
 using namespace std;
 
-const int blocosPorINode=7;
+const int blocosPorINode=8;
 
 struct INode{
     char nome[64];
@@ -15,9 +15,9 @@ struct INode{
     bool expansao;
 };
 
-const int tamDisco=128 *128; //128 é 1k de bytes
-const int tamBloco=2; //8 bytes
-const int tamINodes=128*sizeof(INode);  //128 é 1k de bytes
+const int tamDisco=128*128; //128 é 1k de bytes
+const int tamBloco=8; //8 bytes
+const int tamINodes=64*sizeof(INode);  //128 é 1k de bytes
 const int tamGerVazioInodes=tamINodes/sizeof(INode);
 const int temp=(tamDisco-tamINodes-tamGerVazioInodes)/tamBloco;
 const int tamEspacoBlocos=tamDisco-temp-tamGerVazioInodes-tamINodes;
@@ -47,17 +47,29 @@ char* getBloco(int bloco);
 
 int makeINode(bool dir,char * nome,bool expansao){
     int pos=findInodeLivre();
+    printf("deu merda aqui1\n");
     INode *novo = getINode(pos);
+    printf("deu merda aqui2\n");
     *getMapInode(pos)=true;
-    char temp[]="/";
+    printf("deu merda aqui3\n");
+    //char temp[]="/";
     strcpy(novo->nome,nome);
+    printf("deu merda aqui3.5\n");
     novo->diretorio=dir;
+
+    printf("deu merda aqui4\n");
     novo->pai=diretorioAtual;
+
+    printf("deu merda aqui5\n");
     time(&novo->ultimaModificacao);
+
     limpaReferencias(pos);
+    printf("deu merda aqui6\n");
     if(pos!=0)  //se for a raiz não tem pai
         adicionaReferencia(novo->pai,pos);
     novo->expansao=expansao;
+
+    printf("deu merda aqui7\n");
     novo->tamanho=0;
     return pos;
 }
@@ -71,7 +83,7 @@ void mkdir(char * nome){
 void touch(char* nome){
     int pos=makeINode(false,nome,false);
     getINode(getINode(pos)->pai)->tamanho++;
-    printf("criou arquivo %s",getINode(pos)->nome);
+    printf("criou arquivo %s\n",getINode(pos)->nome);
 }
 
 void removeInode(int pos){
@@ -87,28 +99,39 @@ void echo(char * texto,char*nome){
     int tam= strlen(texto);
     liberaBlocos(pos);  //desfaz todas associações de blocos que o arquivo fez e sobrescreve com o novo texto, alocando apenas os textos necessarios
     INode * inode=getINode(pos);
-    int bloco;
+    int bloco=1337; //inicio inutil
 
     for(int c=0;c<=tam;c++){  //<= pq o \0 tem que entrar
-        if(c%blocosPorINode==0){
+        if(c%tamBloco==0){
+            if(c%(tamBloco*blocosPorINode)==0 && c!=0){
+                printf("\nadicionando novo inode , c= %d, blocos por inode =%d, bloco = %d",c,blocosPorINode,bloco);
+                int novo=makeINode(false,(char*)"expansao",true);
+                inode->enderIndireto=novo;
+                inode=getINode(novo);
+                printf("\n trocou inode \n");
+            }
             bloco=findBlocoLivre();
             *getMapBlocos(bloco)=true;
             adicionaReferencia(pos,bloco);  //aloca um bloco novo quando encher o anterior e cria a referencia para ele
+            printf("\n trocou bloco\n");
         }
-        *(getBloco(bloco)+c%blocosPorINode)=texto[c];
+        printf("%c",texto[c]);
+        *(getBloco(bloco)+c%tamBloco)=texto[c];
     }
 }
 
 void cat(char* nome){
     INode* inode = getINode(findPos(nome));
     char* buffer=(char*)"nada";  // nada é pq o for tem que inicializar com alguma coisa no buffer se nao dá segfault
-    for(int i=0,blocoAtual=0;*(buffer+i%blocosPorINode)!='\0' && inode->enderDireto[0]!=-1;i++){
-        if(i%blocosPorINode==0){
+    for(int i=0,blocoAtual=0;*(buffer+i%tamBloco)!='\0' && inode->enderDireto[0]!=-1;i++){
+        if(i%tamBloco==0){
             buffer=getBloco(inode->enderDireto[blocoAtual]);
             blocoAtual++;
+            printf("\n troca bloco \n");
             if(blocoAtual==blocosPorINode){
                 blocoAtual=0;
                 inode=getINode(inode->enderIndireto);
+                printf("\n troca inode \n");
             }
         }
         printf("%c",*(buffer+i%blocosPorINode));
@@ -120,7 +143,7 @@ void liberaBlocos(int pos){
     INode* inode=getINode(pos);
     do{
         for(int x=0;x<blocosPorINode;x++){
-            *getMapBlocos(inode->enderDireto[x]);
+            *getMapBlocos(inode->enderDireto[x])=false;
             inode->enderDireto[x]=-1;
         }
         if(inode->enderIndireto!=-1){
@@ -318,6 +341,7 @@ INode* getINode(int posicao){
         return NULL;
     }
     posicao=tamGerVazioBlocos+tamGerVazioInodes+sizeof(INode)*posicao;
+    printf("getInode retorna posicao %d do disco \n",posicao);
     return (INode*) disco+posicao;
 }
 
