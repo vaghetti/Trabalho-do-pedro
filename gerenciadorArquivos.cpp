@@ -1,7 +1,7 @@
-    #include <bits/stdc++.h>
+#include <bits/stdc++.h>
 using namespace std;
 
-const int blocosPorINode=8;
+const int blocosPorINode=2;
 
 struct INode{
     char nome[32];
@@ -32,9 +32,9 @@ struct Grupo{
 };
 
 const int tamDisco=32*1024;
-const int tamBloco= 8;
-const int numeroInodes = 128;
-const int numeroBlocos = 64;
+const int tamBloco= 2;
+const int numeroInodes = 256;
+const int numeroBlocos = 256;
 const int numeroUsuarios=16;
 const int tamUsuarios=numeroUsuarios*sizeof(Usuario);
 const int numeroGrupos=8;
@@ -64,18 +64,19 @@ bool*getMapBlocos(int posicao);
 char* getBloco(int bloco);
 
 int makeINode(bool dir,char * nome,bool expansao){
+    //printf("possiblidade de treta\n");
     int pos=findInodeLivre();
-    printf("pos = %d\n",pos);
     INode *novo = getINode(pos);
     *getMapInode(pos)=true;
-    printf("deu merda aqui\n");
     strcpy(novo->nome,nome);
     novo->diretorio=dir;
     novo->pai=diretorioAtual;
-    time(&novo->ultimaModificacao);
+    time(&novo->ultimaModificacao);  //FIXME: não funciona para criar inodes que serão usados como expansões de um arquivo o pai do arquivo tá errado que faz o adiociona referencia fazer merda
     limpaReferencias(pos);
+
     if(pos!=0)  //se for a raiz não tem pai
         adicionaReferencia(novo->pai,pos);
+    printf("nao é treta\n");
     novo->expansao=expansao;
     novo->tamanho=0;
     novo->dono=usuarioAtual;
@@ -136,24 +137,30 @@ void echo(char * texto,char*nome){
     liberaBlocos(pos);  //desfaz todas associações de blocos que o arquivo fez e sobrescreve com o novo texto, alocando apenas os textos necessarios
     INode * inode=getINode(pos);
     int bloco=1337; //inicio inutil
-
+    printf("tam = %d",tam);
     for(int c=0;c<=tam;c++){  //<= pq o \0 tem que entrar
+        printf("c= %d",c);
         if(c%tamBloco==0){
+            printf("\nadicionando novo inode , c= %d, blocos por inode =%d, bloco = %d\n",c,blocosPorINode,bloco);
             if(c%(tamBloco*blocosPorINode)==0 && c!=0){
-                printf("\nadicionando novo inode , c= %d, blocos por inode =%d, bloco = %d",c,blocosPorINode,bloco);
+                printf("entrando nas tretas\n");
                 int novo=makeINode(false,(char*)"expansao",true);
+                printf("adicionando novo inode %d\n",novo);
+                printf("saindo das tretas\n");
                 inode->enderIndireto=novo;
                 inode=getINode(novo);
                 //rintf("\n trocou inode \n");
             }
             bloco=findBlocoLivre();
             *getMapBlocos(bloco)=true;
+            printf("deu merda aqui\n");
             adicionaReferencia(pos,bloco);  //aloca um bloco novo quando encher o anterior e cria a referencia para ele
-            //printf("\n trocou bloco\n");
+            printf("deu merda depois daqui\n");
         }
         //printf("%c",texto[c]);
         *(getBloco(bloco)+c%tamBloco)=texto[c];
     }
+    printf("estou aqui\n");
 }
 
 void cat(char* nome){
@@ -362,7 +369,7 @@ void limpaGrupos(){
 }
 
 void criaSistemaDeArquivos(){
-    disco = (char*) calloc(tamDisco,1);
+    disco = (char*) malloc(tamDisco);
     printf("antes\n");
     int pos = makeINode(true,(char*)"raiz",false);
     printf("depois\n");
@@ -409,12 +416,10 @@ INode* getINode(int posicao){
         return NULL;
     }
     posicao=tamGerVazioBlocos+tamGerVazioInodes+tamUsuarios+tamGrupos+(sizeof(INode)*posicao);
+    //printf("posicao = %d\n",posicao);
+    char * hurr = (char*) disco+posicao;
 
-    INode * teste=(INode*) disco+1203;
-    strcpy(teste->nome,(char*)"pamonha");
-    printf("%s\n",teste->nome);
-
-    return (INode*) disco+posicao;
+    return (INode*) hurr    ;
 }
 
 char* getBloco(int bloco){
@@ -423,7 +428,6 @@ char* getBloco(int bloco){
         return NULL;
     }
     int posicao=tamGerVazioBlocos+tamGerVazioInodes+tamGrupos+tamUsuarios+tamINodes+tamBloco*bloco;
-    printf("retornando posicao %d no getbloco\n",posicao);
     return disco+posicao;
 }
 
@@ -445,7 +449,7 @@ bool login(char * nome){
     for(int x=0;numeroUsuarios;x++){
         usuario=getUsuario(x);
         if(strcmp(usuario->nome,nome)==0){
-            printf("digite a sua senha : ");
+            printf("\n digite a sua senha : ");
             scanf(" %s",senha);
             if(strcmp(usuario->senha,senha)==0){
                 usuarioAtual=x;
@@ -482,7 +486,7 @@ void novoUsuario(char* nome){
     Usuario * user=getUsuario(findUsuarioLivre());
     user->livre=false;
     strcpy(user->nome,nome);
-    printf("digite a senha do novo usuario\n");
+    printf("digite a senha do novo usuario: ");
     scanf("%s",user->senha);
 }
 
@@ -526,16 +530,19 @@ int main(){
     int teste=10;
     bool logado=false;
     while(true){
+        printf("faça login(login) ou crie um usuario(novoUsuario): \n");
         scanf("%s",entrada);
-        if(strcmp(entrada,(char*)"login")){
-            scanf(" %s",entrada);
+        if(strcmp(entrada,(char*)"login")==0){
+            printf("\ninforme seu usuario:");
+            scanf("%s",entrada);
             logado = login(entrada); //login retorna true quando consegue logar
         }
-        if(strcmp(entrada,(char*)"novoUsuario")){
+        if(strcmp(entrada,(char*)"novoUsuario")==0){
+            printf("\nescolha o nome do novo usuario: ");
             scanf(" %s",entrada);
             novoUsuario(entrada);
         }
-        if(strcmp(entrada,(char*)"novoGrupo")){
+        if(strcmp(entrada,(char*)"novoGrupo")==0){
             scanf(" %s",entrada);
             novoGrupo(entrada);
         }
