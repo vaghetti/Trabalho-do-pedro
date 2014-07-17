@@ -12,7 +12,6 @@ struct INode{
     int pai;
     int enderDireto[blocosPorINode];
     int enderIndireto;
-    char teste[4];
     bool expansao;
     int grupo;
     int dono;
@@ -22,11 +21,14 @@ struct INode{
 struct Usuario{
     char nome[32];
     char senha[32];
+    bool livre;
 };
 
+const int usuariosPorGrupo=4;
 struct Grupo{
     char nome[32];
-    int membro[4];
+    int membro[usuariosPorGrupo];
+    bool livre;
 };
 
 const int tamDisco=32*1024;
@@ -34,64 +36,50 @@ const int tamBloco= 8;
 const int numeroInodes = 128;
 const int numeroBlocos = 64;
 const int numeroUsuarios=16;
-const int espacoUsuarios=numeroUsuarios*sizeof(Usuario);
-const int grupos=8;
-const int espacoGrupos=grupos*sizeof(Grupo);
+const int tamUsuarios=numeroUsuarios*sizeof(Usuario);
+const int numeroGrupos=8;
+const int tamGrupos=numeroGrupos*sizeof(Grupo);
 const int tamINodes= sizeof(INode)*numeroInodes;
 const int tamGerVazioInodes = numeroInodes;
 const int tamGerVazioBlocos=numeroBlocos;
 const int tamEspacoBlocos= numeroBlocos*tamBloco;
 
-
-
-int INODESCRIADOS=0;
 int diretorioAtual=0;
-char nomeUsuario[32];
 FILE *arquivo;
 char *disco;
-bool *mapaInodes;
-bool *mapaBlocos;
+int usuarioAtual;
+
 void liberaBlocos(int pos);
-
-
+Usuario * getUsuario(int posicao);
+Grupo * getGrupo(int posicao);
 char * geraArvoreDiretorio();  //uma pamonha de funções que precisavam ser chamadas fora de ordem
 int findInodeLivre();
 bool* getMapInode(int posicao);
 INode* getINode(int posicao);
 void adicionaReferencia(int pai,int ref);
 void limpaReferencias(int pos);
-int findPos(char* nome);
+int findPosINode(char* nome);
 int findBlocoLivre();
 bool*getMapBlocos(int posicao);
 char* getBloco(int bloco);
 
 int makeINode(bool dir,char * nome,bool expansao){
     int pos=findInodeLivre();
-    //printf("deu merda aqui1\n");
+    printf("pos = %d\n",pos);
     INode *novo = getINode(pos);
-    printf("ponteiro novo : %p\n",novo);
-    //printf("deu merda aqui2\n");
     *getMapInode(pos)=true;
-    //printf("deu merda aqui3\n");
-    //char temp[]="/";
+    printf("deu merda aqui\n");
     strcpy(novo->nome,nome);
-    printf("deu merda aqui3.5\n");
     novo->diretorio=dir;
-
-    printf("deu merda aqui4\n");
     novo->pai=diretorioAtual;
-
-    //printf("deu merda aqui5\n");
     time(&novo->ultimaModificacao);
-
     limpaReferencias(pos);
-    //printf("deu merda aqui6\n");
     if(pos!=0)  //se for a raiz não tem pai
         adicionaReferencia(novo->pai,pos);
     novo->expansao=expansao;
-
-    //printf("deu merda aqui7\n");
     novo->tamanho=0;
+    novo->dono=usuarioAtual;
+    novo->grupo=-1;
     return pos;
 }
 
@@ -143,7 +131,7 @@ void removeInode(int pos){
 }
 
 void echo(char * texto,char*nome){
-    int pos = findPos(nome);
+    int pos = findPosINode(nome);
     int tam= strlen(texto);
     liberaBlocos(pos);  //desfaz todas associações de blocos que o arquivo fez e sobrescreve com o novo texto, alocando apenas os textos necessarios
     INode * inode=getINode(pos);
@@ -169,7 +157,7 @@ void echo(char * texto,char*nome){
 }
 
 void cat(char* nome){
-    INode* inode = getINode(findPos(nome));
+    INode* inode = getINode(findPosINode(nome));
     char* buffer=(char*)"nada";  // nada é pq o for tem que inicializar com alguma coisa no buffer se nao dá segfault
     for(int i=0,blocoAtual=0;*(buffer+i%tamBloco)!='\0' && inode->enderDireto[0]!=-1;i++){
         if(i%tamBloco==0){
@@ -221,18 +209,18 @@ void removeReferencia(int pai,int ref){
 
 void rmdir(char * nome){
     //printf("posicao do inode a ser removido %d\n",findPos(nome));
-    INode* removido=getINode(findPos(nome));
+    INode* removido=getINode(findPosINode(nome));
     INode* pai=getINode(removido->pai);
     if(removido->tamanho==0){
         pai->tamanho--;
-        removeInode(findPos(nome));
-        removeReferencia(removido->pai,findPos(nome));
+        removeInode(findPosINode(nome));
+        removeReferencia(removido->pai,findPosINode(nome));
     }else{
         printf("A pasta %s não está vazia\n",nome);
     }
 }
 
-int findPos(char* nome){
+int findPosINode(char* nome){
     //printf("procurando inode com nome : %s\n",nome);
     INode* inode=getINode(diretorioAtual);
     char*nomeTemp;
@@ -254,6 +242,26 @@ int findPos(char* nome){
     }
 }
 
+int findPosUsuario(char * nome){
+    for(int x=0;x<numeroUsuarios;x++){
+        if(strcmp(getUsuario(x)->nome,nome)==0){
+            return x;
+        }
+    }
+    printf("usuario nao encontrado\n");
+    return -1;
+}
+
+int findPosGrupo(char *nome){
+    for(int x=0;x<numeroGrupos;x++){
+        if(strcmp(getGrupo(x)->nome,nome)==0){
+            return x;
+        }
+    }
+    printf("grupo nao encontrado\n");
+    return -1;
+}
+
 void cd(char*nome){
     INode* inode=getINode(diretorioAtual);
     int pos;
@@ -262,7 +270,7 @@ void cd(char*nome){
         diretorioAtual=inode->pai;
         return;
     }
-    pos=findPos(nome);
+    pos=findPosINode(nome);
     if(pos!=-1 && getINode(pos)->diretorio){
         printf("mudou diretorio com sucesso\n");
         printf("diretorio atual muda de %d para ",diretorioAtual);
@@ -321,10 +329,8 @@ char * geraArvoreDiretorio(){
     string dir="";
     string nome;
     while (temp->pai!=-1){
-        //printf("bugou aqui\n");
         nome=temp->nome;
         dir=nome+"/"+dir;
-        //cout<<dir<<endl;
         temp=getINode(temp->pai);
     }
     return (char*) &(dir[0]);
@@ -339,18 +345,29 @@ bool*getMapBlocos(int posicao){
     return (bool*) disco+posicao;
 }
 
+void limpaUsuarios(){
+    for(int x=0;x<numeroUsuarios;x++){
+        getUsuario(x)->livre=true;
+        strcpy(getUsuario(x)->nome,(char*)"vazio");
+    }
+}
+
+void limpaGrupos(){
+    for(int x=0;x<numeroGrupos;x++){
+        getGrupo(x)->livre=true;
+        for(int y=0;y<usuariosPorGrupo;y++){
+            getGrupo(x)->membro[y]=-1;
+        }
+    }
+}
+
 void criaSistemaDeArquivos(){
     disco = (char*) calloc(tamDisco,1);
-    /*INode *raiz = (INode*)disco + tamGerVazioBlocos+tamGerVazioInodes;
-    strcpy(raiz->nome,"RAIZ");
-    raiz->diretorio=true;
-    time(&raiz->ultimaModificacao);
-    raiz->pai=-1;*/
+    printf("antes\n");
     int pos = makeINode(true,(char*)"raiz",false);
+    printf("depois\n");
     getINode(pos)->pai=-1;
-
     diretorioAtual=pos;
-
     for(int cont = 1; cont < tamGerVazioInodes; cont++){  //inicializa todos espacoes do gerenciador de inodes vazios menos o primeiro que e a raiz
         *getMapInode(cont) = false;
     }
@@ -359,6 +376,9 @@ void criaSistemaDeArquivos(){
         *getMapBlocos(cont) = false;
     }
     printf("gerou mapa de blocos\n");
+
+    limpaGrupos();
+    limpaUsuarios();
 }
 
 int findInodeLivre(){
@@ -388,8 +408,12 @@ INode* getINode(int posicao){
         printf("inode invalido\n");
         return NULL;
     }
-    posicao=tamGerVazioBlocos+tamGerVazioInodes+sizeof(INode)*posicao;
-    printf("getInode retorna posicao %d do disco \n",posicao);
+    posicao=tamGerVazioBlocos+tamGerVazioInodes+tamUsuarios+tamGrupos+(sizeof(INode)*posicao);
+
+    INode * teste=(INode*) disco+1203;
+    strcpy(teste->nome,(char*)"pamonha");
+    printf("%s\n",teste->nome);
+
     return (INode*) disco+posicao;
 }
 
@@ -398,32 +422,93 @@ char* getBloco(int bloco){
         printf("bloco invalido\n");
         return NULL;
     }
-    int posicao=tamGerVazioBlocos+tamGerVazioInodes+tamINodes+tamBloco*bloco;
+    int posicao=tamGerVazioBlocos+tamGerVazioInodes+tamGrupos+tamUsuarios+tamINodes+tamBloco*bloco;
     printf("retornando posicao %d no getbloco\n",posicao);
     return disco+posicao;
 }
 
+Grupo * getGrupo(int posicao){
+    return (Grupo*) disco+tamGerVazioBlocos+tamGerVazioInodes+tamUsuarios+posicao*sizeof(Grupo);
+}
+
 Usuario* getUsuario(int posicao){
-    return disco+tamGerVazioBlocos+tamGerVazioInodes+sizeof(Usuario)*posicao;
+    return(Usuario*) disco+tamGerVazioBlocos+tamGerVazioInodes+sizeof(Usuario)*posicao;
 }
 
 void printInfoDisco(){
     printf("Tamanho do disco :%d\ngerencimento dos blocos %d\ninodes:%d\nVazio dos inodes %d\nEspaço para os blocos %d\n Tamanho do inode %d\n",tamDisco,tamGerVazioBlocos,tamINodes,tamGerVazioInodes,tamEspacoBlocos,sizeof(INode));
 }
 
-
-
-int login(char * nome){
+bool login(char * nome){
+    Usuario* usuario;
+    char senha[64];
     for(int x=0;numeroUsuarios;x++){
-
+        usuario=getUsuario(x);
+        if(strcmp(usuario->nome,nome)==0){
+            printf("digite a sua senha : ");
+            scanf(" %s",senha);
+            if(strcmp(usuario->senha,senha)==0){
+                usuarioAtual=x;
+                return true;
+            }else{
+                break;
+            }
+        }
     }
+    return false;
+}
+
+int findUsuarioLivre(){
+    for(int x=0;x<numeroUsuarios;x++){
+        if(getUsuario(x)->livre){
+            return x;
+        }
+    }
+    printf("todos usuarios ocupados\n");
+    return -1;
+}
+
+int findGrupoLivre(){
+    for(int x=0;x<numeroGrupos;x++){
+        if(getGrupo(x)->livre){
+            return x;
+        }
+    }
+    printf("nenhum grupo livre encontrado\n");
+    return -1;
+}
+
+void novoUsuario(char* nome){
+    Usuario * user=getUsuario(findUsuarioLivre());
+    user->livre=false;
+    strcpy(user->nome,nome);
+    printf("digite a senha do novo usuario\n");
+    scanf("%s",user->senha);
+}
+
+void novoGrupo(char * nome){
+    Grupo * grupo = getGrupo(findGrupoLivre());
+    strcpy(grupo->nome,nome);
+    grupo->livre=false;
+}
+
+void insereNoGrupo(char* nomeGrupo,char* nome){
+    int numGrupo=findPosGrupo(nomeGrupo);
+    int numUser=findPosUsuario(nome);
+    Grupo* grupo=getGrupo(numGrupo);
+    for(int x=0;x<usuariosPorGrupo;x++){
+        if(grupo->membro[x]==-1){
+            grupo->membro[x]=numUser;
+            return;
+        }
+    }
+    printf("grupo cheio\n");
 }
 
 int main(){
-    printf("tamanho de um bool %d, time %d , short int %d , inode %d\n",sizeof(bool),sizeof(time_t), sizeof(short int),sizeof(INode));
+    printf("ponteiro de char : %d ponteiro de inode : %d",sizeof(char*),sizeof(INode*));
     printInfoDisco();
-    printf("Bem vindo ao sistema de arquivos!\nInforme seu nome: ");
-    scanf("%s",nomeUsuario);
+    printf("Bem vindo ao sistema de arquivos!\n");
 
     arquivo=fopen("arquivo.bin","r+");
     if(arquivo==NULL){
@@ -434,28 +519,34 @@ int main(){
         printf("Arquivo aberto com sucesso\n");
     }
     criaSistemaDeArquivos();
-    printf("blocos : \n");
-    for(int cont = 0; cont < tamGerVazioBlocos; cont++){
-        printf(" %p = %d\n",getMapBlocos(cont),*getMapBlocos(cont));
-    }
-
-    printf("inodes: \n");
-    for(int cont = 0; cont < tamGerVazioInodes; cont++){
-        printf(" %p = %d\n",getMapInode(cont),*getMapInode(cont));
-    }
 
     //disco=(char)malloc(tamDisco);
     //disco=mmap
     char entrada[256];
     int teste=10;
+    bool logado=false;
     while(true){
         scanf("%s",entrada);
         if(strcmp(entrada,(char*)"login")){
             scanf(" %s",entrada);
+            logado = login(entrada); //login retorna true quando consegue logar
+        }
+        if(strcmp(entrada,(char*)"novoUsuario")){
+            scanf(" %s",entrada);
+            novoUsuario(entrada);
+        }
+        if(strcmp(entrada,(char*)"novoGrupo")){
+            scanf(" %s",entrada);
+            novoGrupo(entrada);
+        }
+        if(strcmp(entrada,(char*)"insereNoGrupo")==0){
+            char nome[32],nomeGrupo[32];
+            scanf("%s %s",nome,nomeGrupo);
+            insereNoGrupo(nome,nomeGrupo);
         }
 
-        while(true){
-            printf("%s@MacBook Pro Retina Display 50': %s~$ ",nomeUsuario,geraArvoreDiretorio());  //FIXME!!! nao sei pq mas quando tem isso fica num printf infinito
+        while(logado){
+            printf("%s@MacBook Pro Retina Display 50': %s~$ ",getUsuario(usuarioAtual)->nome,geraArvoreDiretorio());
             scanf(" %s",entrada);
             printf("leu entrada %s\n",entrada);
             if(strcmp(entrada,(char*)"mkdir")==0){
@@ -494,6 +585,9 @@ int main(){
             if(strcmp(entrada,(char*)"cat")==0){
                 scanf(" %s",entrada);
                 cat(entrada);
+            }
+            if(strcmp(entrada,(char*)"logoff")==0){
+                logado=false;
             }
         }
     }
