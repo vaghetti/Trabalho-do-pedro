@@ -63,19 +63,16 @@ int findBlocoLivre();
 bool*getMapBlocos(int posicao);
 char* getBloco(int bloco);
 
-int makeINode(bool dir,char * nome,bool expansao){
+int makeINode(bool dir,char * nome,bool expansao,int pai){
     //printf("possiblidade de treta\n");
     int pos=findInodeLivre();
     INode *novo = getINode(pos);
     *getMapInode(pos)=true;
     strcpy(novo->nome,nome);
     novo->diretorio=dir;
-    novo->pai=diretorioAtual;
     time(&novo->ultimaModificacao);  //FIXME: não funciona para criar inodes que serão usados como expansões de um arquivo o pai do arquivo tá errado que faz o adiociona referencia fazer merda
     limpaReferencias(pos);
-
-    if(pos!=0)  //se for a raiz não tem pai
-        adicionaReferencia(novo->pai,pos);
+    novo->pai=pai;
     printf("nao é treta\n");
     novo->expansao=expansao;
     novo->tamanho=0;
@@ -105,8 +102,9 @@ bool nomeUsado(char* nome ){
 
 void mkdir(char * nome){
     if(!nomeUsado(nome)){
-        int pos=makeINode(true,nome,false);
+        int pos=makeINode(true,nome,false,diretorioAtual);
         getINode(getINode(pos)->pai)->tamanho++;
+        adicionaReferencia(diretorioAtual,pos);
         printf("criou diretorio %s\n",getINode(pos)->nome);
     }else{
         printf("este nome já foi usado\n");
@@ -115,8 +113,9 @@ void mkdir(char * nome){
 
 void touch(char* nome){
     if(!nomeUsado(nome)){
-        int pos=makeINode(false,nome,false);
+        int pos=makeINode(false,nome,false,diretorioAtual);
         getINode(getINode(pos)->pai)->tamanho++;
+        adicionaReferencia(diretorioAtual,pos);
         printf("criou arquivo %s\n",getINode(pos)->nome);
     }else{
         printf("este nome já foi usado\n");
@@ -141,16 +140,6 @@ void echo(char * texto,char*nome){
     for(int c=0;c<=tam;c++){  //<= pq o \0 tem que entrar
         printf("c= %d",c);
         if(c%tamBloco==0){
-            printf("\nadicionando novo inode , c= %d, blocos por inode =%d, bloco = %d\n",c,blocosPorINode,bloco);
-            if(c%(tamBloco*blocosPorINode)==0 && c!=0){
-                printf("entrando nas tretas\n");
-                int novo=makeINode(false,(char*)"expansao",true);
-                printf("adicionando novo inode %d\n",novo);
-                printf("saindo das tretas\n");
-                inode->enderIndireto=novo;
-                inode=getINode(novo);
-                //rintf("\n trocou inode \n");
-            }
             bloco=findBlocoLivre();
             *getMapBlocos(bloco)=true;
             printf("deu merda aqui\n");
@@ -166,14 +155,17 @@ void echo(char * texto,char*nome){
 void cat(char* nome){
     INode* inode = getINode(findPosINode(nome));
     char* buffer=(char*)"nada";  // nada é pq o for tem que inicializar com alguma coisa no buffer se nao dá segfault
-    for(int i=0,blocoAtual=0;*(buffer+i%tamBloco)!='\0' && inode->enderDireto[0]!=-1;i++){
+    for(int i=0,blocoAtual=0;inode->enderDireto[blocoAtual]!=-1;i++){
         if(i%tamBloco==0){
             buffer=getBloco(inode->enderDireto[blocoAtual]);
             blocoAtual++;
             //printf("\n troca bloco \n");
             if(blocoAtual==blocosPorINode){
                 blocoAtual=0;
-                inode=getINode(inode->enderIndireto);
+                if(inode->enderIndireto!=-1)
+                    inode=getINode(inode->enderIndireto);
+                else
+                    break;
                 //printf("\n troca inode \n");
             }
         }
@@ -290,6 +282,7 @@ void adicionaReferencia(int pai,int ref){
     INode * inodePai=getINode(pai);
     for(int x=0;x<blocosPorINode;x++){
         if(inodePai->enderDireto[x]==-1){
+            printf("entrou no if da escrita direta\n");
             inodePai->enderDireto[x]=ref;
             return;
         }
@@ -298,7 +291,8 @@ void adicionaReferencia(int pai,int ref){
     if(inodePai->enderIndireto!=-1){
         adicionaReferencia(inodePai->enderIndireto,ref);
     }else{
-        inodePai->enderIndireto=makeINode(inodePai->diretorio,(char*)"expansao",true);//caso o inode esteja cheio, é criada uma
+        inodePai->enderIndireto=makeINode(inodePai->diretorio,(char*)"expansao",true,pai);//caso o inode esteja cheio, é criada uma
+        printf("criou o inode novo na posicao %d\n",inodePai->enderIndireto);
         adicionaReferencia(inodePai->enderIndireto,ref);
     }
 }
@@ -371,7 +365,7 @@ void limpaGrupos(){
 void criaSistemaDeArquivos(){
     disco = (char*) malloc(tamDisco);
     printf("antes\n");
-    int pos = makeINode(true,(char*)"raiz",false);
+    int pos = makeINode(true,(char*)"raiz",false,-1);
     printf("depois\n");
     getINode(pos)->pai=-1;
     diretorioAtual=pos;
@@ -449,7 +443,7 @@ bool login(char * nome){
     for(int x=0;numeroUsuarios;x++){
         usuario=getUsuario(x);
         if(strcmp(usuario->nome,nome)==0){
-            printf("\n digite a sua senha : ");
+            printf("digite a sua senha : ");
             scanf(" %s",senha);
             if(strcmp(usuario->senha,senha)==0){
                 usuarioAtual=x;
@@ -538,7 +532,7 @@ int main(){
             logado = login(entrada); //login retorna true quando consegue logar
         }
         if(strcmp(entrada,(char*)"novoUsuario")==0){
-            printf("\nescolha o nome do novo usuario: ");
+            printf("escolha o nome do novo usuario: ");
             scanf(" %s",entrada);
             novoUsuario(entrada);
         }
