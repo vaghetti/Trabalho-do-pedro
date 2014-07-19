@@ -62,6 +62,8 @@ int findPosINode(char* nome);
 int findBlocoLivre();
 bool*getMapBlocos(int posicao);
 char* getBloco(int bloco);
+void chmod(int posicao,char * permissoes);
+bool verificaPermissao(int posicao,int operacao);
 
 int makeINode(bool dir,char * nome,bool expansao,int pai){
     //printf("possiblidade de treta\n");
@@ -78,6 +80,7 @@ int makeINode(bool dir,char * nome,bool expansao,int pai){
     novo->tamanho=0;
     novo->dono=usuarioAtual;
     novo->grupo=-1;
+    chmod(pos,(char*)"331");
     return pos;
 }
 
@@ -132,46 +135,54 @@ void removeInode(int pos){
 
 void echo(char * texto,char*nome){
     int pos = findPosINode(nome);
-    int tam= strlen(texto);
-    liberaBlocos(pos);  //desfaz todas associações de blocos que o arquivo fez e sobrescreve com o novo texto, alocando apenas os textos necessarios
-    INode * inode=getINode(pos);
-    int bloco=1337; //inicio inutil
-    printf("tam = %d",tam);
-    for(int c=0;c<=tam;c++){  //<= pq o \0 tem que entrar
-        printf("c= %d",c);
-        if(c%tamBloco==0){
-            bloco=findBlocoLivre();
-            *getMapBlocos(bloco)=true;
-            printf("deu merda aqui\n");
-            adicionaReferencia(pos,bloco);  //aloca um bloco novo quando encher o anterior e cria a referencia para ele
-            printf("deu merda depois daqui\n");
+    if(verificaPermissao(pos,1)){
+        int tam= strlen(texto);
+        liberaBlocos(pos);  //desfaz todas associações de blocos que o arquivo fez e sobrescreve com o novo texto, alocando apenas os textos necessarios
+        INode * inode=getINode(pos);
+        int bloco=1337; //inicio inutil
+        printf("tam = %d",tam);
+        for(int c=0;c<=tam;c++){  //<= pq o \0 tem que entrar
+            printf("c= %d",c);
+            if(c%tamBloco==0){
+                bloco=findBlocoLivre();
+                *getMapBlocos(bloco)=true;
+                printf("deu merda aqui\n");
+                adicionaReferencia(pos,bloco);  //aloca um bloco novo quando encher o anterior e cria a referencia para ele
+                printf("deu merda depois daqui\n");
+            }
+            //printf("%c",texto[c]);
+            *(getBloco(bloco)+c%tamBloco)=texto[c];
         }
-        //printf("%c",texto[c]);
-        *(getBloco(bloco)+c%tamBloco)=texto[c];
+    }else{
+        printf("voce nao tem permissão para escrever nesse arquivo\n");
     }
-    printf("estou aqui\n");
 }
 
 void cat(char* nome){
-    INode* inode = getINode(findPosINode(nome));
-    char* buffer=(char*)"nada";  // nada é pq o for tem que inicializar com alguma coisa no buffer se nao dá segfault
-    for(int i=0,blocoAtual=0;inode->enderDireto[blocoAtual]!=-1;i++){
-        if(i%tamBloco==0){
-            buffer=getBloco(inode->enderDireto[blocoAtual]);
-            blocoAtual++;
-            //printf("\n troca bloco \n");
-            if(blocoAtual==blocosPorINode){
-                blocoAtual=0;
-                if(inode->enderIndireto!=-1)
-                    inode=getINode(inode->enderIndireto);
-                else
-                    break;
-                //printf("\n troca inode \n");
+    int pos = findPosINode(nome);
+    if(verificaPermissao(pos,0)){
+        INode* inode = getINode(pos);
+        char* buffer=(char*)"nada";  // nada é pq o for tem que inicializar com alguma coisa no buffer se nao dá segfault
+        for(int i=0,blocoAtual=0;inode->enderDireto[blocoAtual]!=-1;i++){
+            if(i%tamBloco==0){
+                buffer=getBloco(inode->enderDireto[blocoAtual]);
+                blocoAtual++;
+                //printf("\n troca bloco \n");
+                if(blocoAtual==blocosPorINode){
+                    blocoAtual=0;
+                    if(inode->enderIndireto!=-1)
+                        inode=getINode(inode->enderIndireto);
+                    else
+                        break;
+                    //printf("\n troca inode \n");
+                }
             }
+            printf("%c",*(buffer+i%blocosPorINode));
         }
-        printf("%c",*(buffer+i%blocosPorINode));
+        printf("\n");
+    }else{
+        printf("Voce nao tem permissão para ler esse arquivo\n");
     }
-    printf("\n");
 }
 
 void liberaBlocos(int pos){
@@ -207,15 +218,19 @@ void removeReferencia(int pai,int ref){
 }
 
 void rmdir(char * nome){
-    //printf("posicao do inode a ser removido %d\n",findPos(nome));
-    INode* removido=getINode(findPosINode(nome));
-    INode* pai=getINode(removido->pai);
-    if(removido->tamanho==0){
-        pai->tamanho--;
-        removeInode(findPosINode(nome));
-        removeReferencia(removido->pai,findPosINode(nome));
+    int pos = findPosINode(nome);
+    if(verificaPermissao(pos,1)){
+        INode* removido=getINode(pos);
+        INode* pai=getINode(removido->pai);
+        if(removido->tamanho==0){
+            pai->tamanho--;
+            removeInode(findPosINode(nome));
+            removeReferencia(removido->pai,findPosINode(nome));
+        }else{
+            printf("A pasta %s não está vazia\n",nome);
+        }
     }else{
-        printf("A pasta %s não está vazia\n",nome);
+        printf("voce nao tem permissão de escrita sobre essa pasta\n");
     }
 }
 
@@ -263,18 +278,21 @@ int findPosGrupo(char *nome){
 
 void cd(char*nome){
     INode* inode=getINode(diretorioAtual);
-    int pos;
     char*nomeTemp;
     if(strcmp(nome,(char*)"..")==0 && inode->pai!=-1){
         diretorioAtual=inode->pai;
         return;
     }
-    pos=findPosINode(nome);
-    if(pos!=-1 && getINode(pos)->diretorio){
-        printf("mudou diretorio com sucesso\n");
-        printf("diretorio atual muda de %d para ",diretorioAtual);
-        diretorioAtual=pos;
-        printf("%d\n",diretorioAtual);
+    int pos=findPosINode(nome);
+    if(verificaPermissao(pos,0)){
+        if(pos!=-1 && getINode(pos)->diretorio){
+            printf("mudou diretorio com sucesso\n");
+            printf("diretorio atual muda de %d para ",diretorioAtual);
+            diretorioAtual=pos;
+            printf("%d\n",diretorioAtual);
+        }
+    }else{
+        printf("voce nao tem permissão de leitura para esta pasta\n");
     }
 }
 
@@ -304,15 +322,22 @@ void limpaReferencias(int pos){
     }
     inode->enderIndireto=-1;
 }
+
 void ls(){
     INode* inode=getINode(diretorioAtual);
     while(true){
         for(int x=0;x<blocosPorINode;x++){
             if(inode->enderDireto[x]!=-1){
                 if(getINode(inode->enderDireto[x])->diretorio){
-                    printf("diretorio- ");
+                    printf("dir- ");
                 }else{
-                    printf("arquivo- ");
+                    printf("arq- ");
+                }
+
+                for(int y=0;y<9;y++){
+                    printf("%d",inode->permissoes[y]);
+                    if((y+1)%3==0)
+                        printf(" ");
                 }
                 printf(" %s\n",getINode(inode->enderDireto[x])->nome);  //mostra o nome do inode relacionado, caso exista
             }
@@ -366,8 +391,10 @@ void criaSistemaDeArquivos(){
     disco = (char*) malloc(tamDisco);
     printf("antes\n");
     int pos = makeINode(true,(char*)"raiz",false,-1);
+    chmod(pos,(char*)"777"); //todo mundo pode usar o raiz
     printf("depois\n");
-    getINode(pos)->pai=-1;
+    getINode(pos)->pai=-1; //raiz nao tem pai
+    getINode(pos)->dono= -1;  //nem dono
     diretorioAtual=pos;
     for(int cont = 1; cont < tamGerVazioInodes; cont++){  //inicializa todos espacoes do gerenciador de inodes vazios menos o primeiro que e a raiz
         *getMapInode(cont) = false;
@@ -500,7 +527,54 @@ void insereNoGrupo(char* nomeGrupo,char* nome){
             return;
         }
     }
-    printf("grupo cheio\n");
+    printf("grupo heio\n");
+}
+
+bool * toBinario(char c){
+    c=c-'0';
+    bool retorno[3];
+    retorno[0]=(c&1==1);
+    retorno[1]=(c&2==2);
+    retorno[2]=(c&4==4);
+    return retorno;
+}
+
+void chmod(int posicao,char * permissoes){
+    bool *arrayPermissoes;
+    INode * inode=getINode(posicao);
+    if(posicao==0 || inode->dono==usuarioAtual){  // só pode dar chmod se for o dono do arquivo ou estiver criando a raiz
+        for(int x=0;x<3;x++){
+            arrayPermissoes=toBinario(permissoes[x]);
+            for(int y=0;y<3;y++){
+                inode->permissoes[3*x+y]=arrayPermissoes[y];
+            }
+        }
+    }else{
+        printf("voce nao tem permissao para alterar as permissoes desse arquivo\n");
+    }
+}
+
+bool pertenceAoGrupo(int posicao){
+    Grupo * grupo = getGrupo(posicao);
+    for(int x=0;x<usuariosPorGrupo;x++){
+        if(grupo->membro[x]==usuarioAtual)
+            return true;
+    }
+    return false;
+}
+
+bool verificaPermissao(int posicao,int operacao){
+    INode * inode = getINode(posicao);
+    if(inode->dono==usuarioAtual){
+        if(inode->permissoes[operacao]){
+            return true;
+        }
+    }
+    if(pertenceAoGrupo(inode->grupo)){
+        if(inode->permissoes[3+operacao])
+            return true;
+    }
+    return inode->permissoes[6+operacao]; //se nenhum deu retorna a permissao pro resto
 }
 
 int main(){
@@ -589,6 +663,12 @@ int main(){
             }
             if(strcmp(entrada,(char*)"logoff")==0){
                 logado=false;
+            }
+            if(strcmp(entrada,(char*)"chmod")==0){
+                char nome[32],permissao[10];
+                scanf(" %s %s",permissao,nome);
+                int pos = findPosINode(nome);
+                chmod(pos,permissao);
             }
         }
     }
