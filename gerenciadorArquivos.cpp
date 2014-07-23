@@ -22,27 +22,10 @@ struct INode{
     bool permissoes[9];
 };
 
-struct Usuario{
-    char nome[32];
-    char senha[32];
-    bool livre;
-};
-
-const int usuariosPorGrupo=4;
-struct Grupo{
-    char nome[32];
-    int membro[usuariosPorGrupo];
-    bool livre;
-};
-
 const int tamDisco=32*1024;
 const int tamBloco= 2;
 const int numeroInodes = 256;
 const int numeroBlocos = 256;
-const int numeroUsuarios=16;
-const int tamUsuarios=numeroUsuarios*sizeof(Usuario);
-const int numeroGrupos=8;
-const int tamGrupos=numeroGrupos*sizeof(Grupo);
 const int tamINodes= sizeof(INode)*numeroInodes;
 const int tamGerVazioInodes = numeroInodes;
 const int tamGerVazioBlocos=numeroBlocos;
@@ -54,8 +37,6 @@ char *disco;
 int usuarioAtual;
 
 void liberaBlocos(int pos);
-Usuario * getUsuario(int posicao);
-Grupo * getGrupo(int posicao);
 char * geraArvoreDiretorio();  //uma pamonha de funções que precisavam ser chamadas fora de ordem
 int findInodeLivre();
 bool* getMapInode(int posicao);
@@ -69,6 +50,7 @@ char* getBloco(int bloco);
 void chmod(int posicao,char * permissoes);
 bool verificaPermissao(int posicao,int operacao);
 char * criptografa(char * senha);
+void addUser(char* nome,char * senha);
 
 int makeINode(bool dir,char * nome,bool expansao,int pai){
     //printf("possiblidade de treta\n");
@@ -139,6 +121,7 @@ void removeInode(int pos){
 }
 
 void echo(char * texto,char*nome){
+    printf("echo escrevendo %s em %s\n",texto,nome);
     int pos = findPosINode(nome);
     if(verificaPermissao(pos,1)){
         int tam= strlen(texto);
@@ -163,8 +146,9 @@ void echo(char * texto,char*nome){
     }
 }
 
-void cat(char* nome){
+string leArquivo(char* nome){
     int pos = findPosINode(nome);
+    string saida="";
     if(verificaPermissao(pos,0)){
         INode* inode = getINode(pos);
         char* buffer=(char*)"nada";  // nada é pq o for tem que inicializar com alguma coisa no buffer se nao dá segfault
@@ -182,12 +166,20 @@ void cat(char* nome){
                     //printf("\n troca inode \n");
                 }
             }
-            printf("%c",*(buffer+i%blocosPorINode));
+            //printf("%c",*(buffer+i%blocosPorINode));
+            saida+=(*(buffer+i%blocosPorINode));
         }
-        printf("\n");
+        cout<<"saida : " <<saida<<endl;
+        printf("saida gerada no le arquivo : %s\n",saida.c_str());
+        return saida;
     }else{
         printf("Voce nao tem permissão para ler esse arquivo\n");
     }
+
+}
+
+void cat(char* nome){
+    printf("%s\n",leArquivo(nome).c_str());
 }
 
 void liberaBlocos(int pos){
@@ -261,25 +253,6 @@ int findPosINode(char* nome){
     }
 }
 
-int findPosUsuario(char * nome){
-    for(int x=0;x<numeroUsuarios;x++){
-        if(strcmp(getUsuario(x)->nome,nome)==0){
-            return x;
-        }
-    }
-    printf("usuario nao encontrado\n");
-    return -1;
-}
-
-int findPosGrupo(char *nome){
-    for(int x=0;x<numeroGrupos;x++){
-        if(strcmp(getGrupo(x)->nome,nome)==0){
-            return x;
-        }
-    }
-    printf("grupo nao encontrado\n");
-    return -1;
-}
 
 void cd(char*nome){
     INode* inode=getINode(diretorioAtual);
@@ -376,42 +349,22 @@ bool*getMapBlocos(int posicao){
     return (bool*) disco+posicao;
 }
 
-void limpaUsuarios(){
-    for(int x=0;x<numeroUsuarios;x++){
-        getUsuario(x)->livre=true;
-        strcpy(getUsuario(x)->nome,(char*)"vazio");
-    }
-}
-
-void limpaGrupos(){
-    for(int x=0;x<numeroGrupos;x++){
-        getGrupo(x)->livre=true;
-        for(int y=0;y<usuariosPorGrupo;y++){
-            getGrupo(x)->membro[y]=-1;
-        }
-    }
-}
-
 void criaSistemaDeArquivos(){
     disco = (char*) malloc(tamDisco);
-    printf("antes\n");
     int pos = makeINode(true,(char*)"raiz",false,-1);
     chmod(pos,(char*)"777"); //todo mundo pode usar o raiz
-    printf("depois\n");
     getINode(pos)->pai=-1; //raiz nao tem pai
     getINode(pos)->dono= -1;  //nem dono
     diretorioAtual=pos;
     for(int cont = 1; cont < tamGerVazioInodes; cont++){  //inicializa todos espacoes do gerenciador de inodes vazios menos o primeiro que e a raiz
         *getMapInode(cont) = false;
     }
-    printf("Gerou mapa de Inodes\n");
     for(int cont = 0; cont < tamGerVazioBlocos; cont++){
         *getMapBlocos(cont) = false;
     }
-    printf("gerou mapa de blocos\n");
-
-    limpaGrupos();
-    limpaUsuarios();
+    touch((char*)"passwd");
+    addUser((char*)"admin",(char*)"admin");
+    printf("criou sistema de arquivos\n");
 }
 
 int findInodeLivre(){
@@ -441,7 +394,7 @@ INode* getINode(int posicao){
         printf("inode invalido\n");
         return NULL;
     }
-    posicao=tamGerVazioBlocos+tamGerVazioInodes+tamUsuarios+tamGrupos+(sizeof(INode)*posicao);
+    posicao=tamGerVazioBlocos+tamGerVazioInodes+(sizeof(INode)*posicao);
     //printf("posicao = %d\n",posicao);
     char * hurr = (char*) disco+posicao;
 
@@ -453,88 +406,80 @@ char* getBloco(int bloco){
         printf("bloco invalido\n");
         return NULL;
     }
-    int posicao=tamGerVazioBlocos+tamGerVazioInodes+tamGrupos+tamUsuarios+tamINodes+tamBloco*bloco;
+    int posicao=tamGerVazioBlocos+tamGerVazioInodes+tamINodes+tamBloco*bloco;
     return disco+posicao;
-}
-
-Grupo * getGrupo(int posicao){
-    return (Grupo*) disco+tamGerVazioBlocos+tamGerVazioInodes+tamUsuarios+posicao*sizeof(Grupo);
-}
-
-Usuario* getUsuario(int posicao){
-    return(Usuario*) disco+tamGerVazioBlocos+tamGerVazioInodes+sizeof(Usuario)*posicao;
 }
 
 void printInfoDisco(){
     printf("Tamanho do disco :%d\ngerencimento dos blocos %d\ninodes:%d\nVazio dos inodes %d\nEspaço para os blocos %d\n Tamanho do inode %d\n",tamDisco,tamGerVazioBlocos,tamINodes,tamGerVazioInodes,tamEspacoBlocos,sizeof(INode));
 }
 
-bool login(char * nome){
-    Usuario* usuario;
-    char senha[64];
-    for(int x=0;numeroUsuarios;x++){
-        usuario=getUsuario(x);
-        if(strcmp(usuario->nome,nome)==0){
-            printf("digite a sua senha : ");
-            scanf(" %s",senha);
-            if(strcmp(usuario->senha,criptografa(senha))==0){
-                usuarioAtual=x;
-                return true;
-            }else{
-                break;
-            }
+vector <string> split(string entrada,char separador){
+    string temp;
+    cout<<"split recebeu entrada "<<entrada<<endl;
+    vector <string> retorno;
+    for(int x=0;x<entrada.length();x++){
+        if(entrada[x]!=separador){
+            temp+=entrada[x];
+        }else{
+            retorno.push_back(temp);
+            temp.clear();
         }
     }
+    retorno.push_back(temp);
+    temp.clear();
+    cout<<"saida do split : \n";
+    for(int x=0;x<retorno.size();x++){
+        cout<<retorno[x]<<endl;
+    }
+    return retorno;
+}
+
+bool login(char * nomeDigitado,char * senhaDigitada){
+    string usuarios=leArquivo("passwd");
+    cout<<"leu do arquivo :"<<usuarios<<endl;
+    string usuario,senha;
+    vector<string> combos= split(usuarios,';');
+    for(int x=0;x<combos.size();x++){
+        usuario=split(combos[x],':')[0]+"";
+        senha=split(combos[x],':')[1]+"";
+        if(strcmp(usuario.c_str(),nomeDigitado)==0 && strcmp(senha.c_str(),criptografa(senhaDigitada))==0){
+            usuarioAtual=x;
+            printf("logado como %s\n",usuario.c_str());
+            return true;
+        }
+    }
+    printf("usuario ou senha incorretos\n");
     return false;
+
 }
 
-int findUsuarioLivre(){
-    for(int x=0;x<numeroUsuarios;x++){
-        if(getUsuario(x)->livre){
-            return x;
-        }
+void addUser(char* nome,char * senha){
+    if(usuarioAtual==0){
+        printf("vai começar o echo\n");
+        string atual=leArquivo((char*)"passwd");
+        string novoNome=nome;
+        printf("receu senha %s \n",senha);
+        char * durr =criptografa(senha);
+        char temp[32];
+        strcpy(temp,durr);
+        string senhaCrip(temp);
+        cout<<"senhaCrip "<<senhaCrip<<endl;
+        string nova= atual+novoNome+":"+senhaCrip+";";
+        cout<<"nova = "<<nova<<endl;
+        echo(&(nova[0]),((char*)"passwd"));
+
+    }else{
+        printf("apenas admin pode criar novos usuarios\n");
     }
-    printf("todos usuarios ocupados\n");
-    return -1;
-}
-
-int findGrupoLivre(){
-    for(int x=0;x<numeroGrupos;x++){
-        if(getGrupo(x)->livre){
-            return x;
-        }
-    }
-    printf("nenhum grupo livre encontrado\n");
-    return -1;
-}
-
-void novoUsuario(char* nome){
-    Usuario * user=getUsuario(findUsuarioLivre());
-    char temp[32];
-    user->livre=false;
-    strcpy(user->nome,nome);
-    printf("digite a senha do novo usuario: ");
-    scanf("%s",temp);
-    strcpy(user->senha,criptografa(temp));
 }
 
 void novoGrupo(char * nome){
-    Grupo * grupo = getGrupo(findGrupoLivre());
-    strcpy(grupo->nome,nome);
-    grupo->livre=false;
+   printf("reimplementar novo grupo");
 }
 
 void insereNoGrupo(char* nomeGrupo,char* nome){
-    int numGrupo=findPosGrupo(nomeGrupo);
-    int numUser=findPosUsuario(nome);
-    Grupo* grupo=getGrupo(numGrupo);
-    for(int x=0;x<usuariosPorGrupo;x++){
-        if(grupo->membro[x]==-1){
-            grupo->membro[x]=numUser;
-            return;
-        }
-    }
-    printf("grupo heio\n");
+    printf("reimplementar insere no grupo");
 }
 
 bool * toBinario(char c){
@@ -555,12 +500,12 @@ void chmod(int posicao,char * permissoes){
     if(posicao==0 || inode->dono==usuarioAtual){  // só pode dar chmod se for o dono do arquivo ou estiver criando a raiz
         for(int x=0;x<3;x++){
             arrayPermissoes=toBinario(permissoes[x]);
-            printf("gerou array de permissoes: %d %d %d\n",arrayPermissoes[0],arrayPermissoes[1],arrayPermissoes[2]);
+            //printf("gerou array de permissoes: %d %d %d\n",arrayPermissoes[0],arrayPermissoes[1],arrayPermissoes[2]);
             for(int y=0;y<3;y++){
-                printf("botando na posicão %d\n",3*x+y);
+                //printf("botando na posicão %d\n",3*x+y);
                 inode->permissoes[3*x+y]=arrayPermissoes[y];
             }
-            printf("botou no inode : %d %d %d\n",inode->permissoes[3*x],inode->permissoes[3*x+1],inode->permissoes[3*x+2]);
+           // printf("botou no inode : %d %d %d\n",inode->permissoes[3*x],inode->permissoes[3*x+1],inode->permissoes[3*x+2]);
         }
     }else{
         printf("voce nao tem permissao para alterar as permissoes desse arquivo\n");
@@ -568,12 +513,7 @@ void chmod(int posicao,char * permissoes){
 }
 
 bool pertenceAoGrupo(int posicao){
-    Grupo * grupo = getGrupo(posicao);
-    for(int x=0;x<usuariosPorGrupo;x++){
-        if(grupo->membro[x]==usuarioAtual)
-            return true;
-    }
-    return false;
+    printf("pertence ao grupo foi suaceteado\n");
 }
 
 bool verificaPermissao(int posicao,int operacao){
@@ -592,28 +532,18 @@ bool verificaPermissao(int posicao,int operacao){
 
 char * criptografa(char * senha){
     int tam=strlen(senha);
+    char teste[32];
+    strcpy(teste,senha);
     for(int x=0;x<tam;x++){
-        senha[x]+=3;
+        teste[x]+=3;
+        //printf("leu caratecer %c x = %d \n",teste[x],x);
     }
-    return senha;
+    //printf("criptografa mudou senha %s\n",teste);
+    return teste;
 }
 
 void chown(int usuario,int arquivo){
-    INode * inode= getINode(arquivo);
-    if(usuarioAtual==inode->dono){
-        inode->dono=usuario;
-    }else{
-        printf("voce precisa ser o dono desse arquivo para mudar o dono dele\n");
-    }
-}
-
-void setGrupo(int arquivo,int posGrupo){
-    INode* inode = getINode(arquivo);
-    if(usuarioAtual==inode->dono){
-        inode->grupo=posGrupo;
-    }else{
-        printf("voce precisa ser o dono desse arquivo para mudar o grupo dele\n");
-    }
+    printf("precisa atender a nova especificação");
 }
 
 int main(){
@@ -640,14 +570,20 @@ int main(){
         printf("faça login(login) \ncrie um usuario(novoUsuario)  \ncrie um grupo (novoGrupo) \nadicione alguem a um grupo(insereNogrupo):\n");
         scanf("%s",entrada);
         if(strcmp(entrada,(char*)"login")==0){
-            printf("\ninforme seu usuario:");
+            printf("informe seu usuario:");
             scanf("%s",entrada);
-            logado = login(entrada); //login retorna true quando consegue logar
+            printf("digite a senha: ");
+            char senha[32];
+            scanf("%s",senha);
+            logado = login(entrada,senha); //login retorna true quando consegue logar
         }
         if(strcmp(entrada,(char*)"novoUsuario")==0){
             printf("escolha o nome do novo usuario: ");
+            char senha [32];
             scanf(" %s",entrada);
-            novoUsuario(entrada);
+            printf("digite a senha: ");
+            scanf(" %s",senha);
+            addUser(entrada,senha);
         }
         if(strcmp(entrada,(char*)"novoGrupo")==0){
             printf("digite o nome do grupo: ");
@@ -662,7 +598,7 @@ int main(){
         }
 
         while(logado){
-            printf("%s@MacBook Pro Retina Display 50': %s~$ ",getUsuario(usuarioAtual)->nome,geraArvoreDiretorio());
+            printf("%s@MacBook Pro Retina Display 50': %s~$ ","usuarioAtual",geraArvoreDiretorio());
             scanf(" %s",entrada);
             printf("leu entrada %s\n",entrada);
             if(strcmp(entrada,(char*)"mkdir")==0){
@@ -714,13 +650,9 @@ int main(){
             if(strcmp(entrada,(char*)"chown")==0){
                 char arquivo[32],usuario[32];
                 scanf("%s %s",usuario,arquivo);
-                chown(findPosUsuario(usuario),findPosINode(arquivo));
+                printf("chown precisa ser reimplementado\n");
+                //chown(findPosUsuario(usuario),findPosINode(arquivo));
 
-            }
-            if(strcmp(entrada,(char*)"setGrupo")==0){
-                char arquivo[32],grupo[32];
-                scanf("%s %s",arquivo,grupo);
-                setGrupo(findPosINode(arquivo),findPosGrupo(grupo));
             }
         }
     }
