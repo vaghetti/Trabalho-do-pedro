@@ -1,5 +1,5 @@
 #include <bits/stdc++.h>
-
+#include <stdlib.h>
 #define CHECK_BIT(var,pos) ((var) & (1<<(pos)))
 
 using namespace std;
@@ -22,7 +22,6 @@ struct INode{
     bool permissoes[9];
 };
 
-const int tamDisco=32*1024;
 const int tamBloco= 2;
 const int numeroInodes = 256;
 const int numeroBlocos = 256;
@@ -30,6 +29,7 @@ const int tamINodes= sizeof(INode)*numeroInodes;
 const int tamGerVazioInodes = numeroInodes;
 const int tamGerVazioBlocos=numeroBlocos;
 const int tamEspacoBlocos= numeroBlocos*tamBloco;
+const int tamDisco=tamINodes+tamGerVazioInodes+tamEspacoBlocos+tamGerVazioBlocos;
 
 int diretorioAtual=0;
 //FILE *arquivo;
@@ -51,6 +51,7 @@ void chmod(int posicao,char * permissoes);
 bool verificaPermissao(int posicao,int operacao);
 char * criptografa(char * senha);
 void addUser(char* nome,char * senha);
+vector <char * > split(char * entrada,char separador);
 
 int makeINode(bool dir,char * nome,bool expansao,int pai){
     //printf("possiblidade de treta\n");
@@ -62,7 +63,6 @@ int makeINode(bool dir,char * nome,bool expansao,int pai){
     time(&novo->ultimaModificacao);  //FIXME: não funciona para criar inodes que serão usados como expansões de um arquivo o pai do arquivo tá errado que faz o adiociona referencia fazer merda
     limpaReferencias(pos);
     novo->pai=pai;
-    printf("nao é treta\n");
     novo->expansao=expansao;
     novo->tamanho=0;
     novo->dono=usuarioAtual;
@@ -95,7 +95,7 @@ void mkdir(char * nome){
         int pos=makeINode(true,nome,false,diretorioAtual);
         getINode(getINode(pos)->pai)->tamanho++;
         adicionaReferencia(diretorioAtual,pos);
-        printf("criou diretorio %s\n",getINode(pos)->nome);
+        printf("Criou diretorio %s\n",getINode(pos)->nome);
     }else{
         printf("este nome já foi usado\n");
     }
@@ -106,7 +106,7 @@ void touch(char* nome){
         int pos=makeINode(false,nome,false,diretorioAtual);
         getINode(getINode(pos)->pai)->tamanho++;
         adicionaReferencia(diretorioAtual,pos);
-        printf("criou arquivo %s\n",getINode(pos)->nome);
+        printf("Criou arquivo %s\n",getINode(pos)->nome);
     }else{
         printf("este nome já foi usado\n");
     }
@@ -121,7 +121,6 @@ void removeInode(int pos){
 }
 
 void echo(char * texto,char*nome){
-    printf("echo escrevendo %s em %s\n",texto,nome);
     int pos = findPosINode(nome);
     if(verificaPermissao(pos,1)){
         int tam= strlen(texto);
@@ -146,9 +145,10 @@ void echo(char * texto,char*nome){
     }
 }
 
-string leArquivo(char* nome){
+char* leArquivo(char* nome){
     int pos = findPosINode(nome);
-    string saida="";
+    char * saida= (char*)malloc(256);
+    memset(saida,'\0',256);
     if(verificaPermissao(pos,0)){
         INode* inode = getINode(pos);
         char* buffer=(char*)"nada";  // nada é pq o for tem que inicializar com alguma coisa no buffer se nao dá segfault
@@ -167,10 +167,9 @@ string leArquivo(char* nome){
                 }
             }
             //printf("%c",*(buffer+i%blocosPorINode));
-            saida+=(*(buffer+i%blocosPorINode));
+            //saida=(*(buffer+i%blocosPorINode));
+            saida[i]=*(buffer+i%blocosPorINode);
         }
-        cout<<"saida : " <<saida<<endl;
-        printf("saida gerada no le arquivo : %s\n",saida.c_str());
         return saida;
     }else{
         printf("Voce nao tem permissão para ler esse arquivo\n");
@@ -179,7 +178,7 @@ string leArquivo(char* nome){
 }
 
 void cat(char* nome){
-    printf("%s\n",leArquivo(nome).c_str());
+    printf("%s\n",leArquivo(nome));
 }
 
 void liberaBlocos(int pos){
@@ -253,11 +252,31 @@ int findPosINode(char* nome){
     }
 }
 
+int findPosUsuario(char* nome){
+    vector < char * > nomes = split(leArquivo((char*)"passwd"),';');
+    for(int x=0;x<nomes.size();x++){
+        if(strcmp(split(nomes[x],':')[0],nome)==0){
+            return x;
+        }
+    }
+    printf("Usuario nao encontrado\n");
+    return -1;
+}
+
+int findPosGrupo(char * nome){
+    vector < char *> nomes = split(leArquivo((char*)"grupos"),';');
+    for(int x=0;x<nomes.size();x++){
+        if(strcmp(split(nomes[x],',')[0],nome)==0){
+            return x;
+        }
+    }
+    printf("grupo nao encontrado \n");
+}
 
 void cd(char*nome){
     INode* inode=getINode(diretorioAtual);
     char*nomeTemp;
-    if(strcmp(nome,(char*)"..")==0 && inode->pai!=-1){
+    if(strcmp(nome,(char*)"..")==0 && inode->pai!=-1){\
         diretorioAtual=inode->pai;
         return;
     }
@@ -278,7 +297,7 @@ void adicionaReferencia(int pai,int ref){
     INode * inodePai=getINode(pai);
     for(int x=0;x<blocosPorINode;x++){
         if(inodePai->enderDireto[x]==-1){
-            printf("entrou no if da escrita direta\n");
+            printf("entrou no if da escrita direta\n"); // dando merda
             inodePai->enderDireto[x]=ref;
             return;
         }
@@ -288,7 +307,7 @@ void adicionaReferencia(int pai,int ref){
         adicionaReferencia(inodePai->enderIndireto,ref);
     }else{
         inodePai->enderIndireto=makeINode(inodePai->diretorio,(char*)"expansao",true,pai);//caso o inode esteja cheio, é criada uma
-        printf("criou o inode novo na posicao %d\n",inodePai->enderIndireto);
+        //printf("criou o inode novo na posicao %d\n",inodePai->enderIndireto);
         adicionaReferencia(inodePai->enderIndireto,ref);
     }
 }
@@ -364,13 +383,14 @@ void criaSistemaDeArquivos(){
     }
     touch((char*)"passwd");
     addUser((char*)"admin",(char*)"admin");
-    printf("criou sistema de arquivos\n");
+    touch((char*)"grupos");
+    printf("Criou sistema de arquivos\n");
 }
 
 int findInodeLivre(){
     for(int i=0;i<tamGerVazioInodes;i++){
         if(*getMapInode(i)==false){
-            printf("encontrou inode %d livre\n",i);
+            //printf("encontrou inode %d livre\n",i);
             return i;
         }
     }
@@ -381,7 +401,7 @@ int findInodeLivre(){
 int findBlocoLivre(){
     for(int i=0;i<tamGerVazioBlocos;i++){
         if(*getMapBlocos(i)==false){
-            printf("encontrou bloco %d livre\n",i);
+            //printf("encontrou bloco %d livre\n",i);
             return i;
         }
     }
@@ -411,41 +431,41 @@ char* getBloco(int bloco){
 }
 
 void printInfoDisco(){
-    printf("Tamanho do disco :%d\ngerencimento dos blocos %d\ninodes:%d\nVazio dos inodes %d\nEspaço para os blocos %d\n Tamanho do inode %d\n",tamDisco,tamGerVazioBlocos,tamINodes,tamGerVazioInodes,tamEspacoBlocos,sizeof(INode));
+    //printf("Tamanho do disco :%d\nGerencimento dos blocos %d\nInodes:%d\nVazio dos inodes %d\nEspaço para os blocos %d\nTamanho do inode %d\n",tamDisco,tamGerVazioBlocos,tamINodes,tamGerVazioInodes,tamEspacoBlocos,sizeof(INode));
 }
 
-vector <string> split(string entrada,char separador){
-    string temp;
-    cout<<"split recebeu entrada "<<entrada<<endl;
-    vector <string> retorno;
-    for(int x=0;x<entrada.length();x++){
+vector <char * > split(char * entrada,char separador){
+    vector <char *> retorno;
+    char * temp = (char*)calloc(256,1);
+    int inicio=0;
+    //printf("entrada do split: %s\n",entrada);
+    int tam = strlen(entrada);
+    for(int x=0;x<tam;x++){
         if(entrada[x]!=separador){
-            temp+=entrada[x];
+            temp[x-inicio]=entrada[x];
         }else{
+            inicio=x+1;
             retorno.push_back(temp);
-            temp.clear();
+           // printf("dando push back em temp = %s\n",temp);
+            temp = (char*)calloc(256,1);
         }
     }
     retorno.push_back(temp);
-    temp.clear();
-    cout<<"saida do split : \n";
-    for(int x=0;x<retorno.size();x++){
-        cout<<retorno[x]<<endl;
-    }
     return retorno;
 }
 
-bool login(char * nomeDigitado,char * senhaDigitada){
-    string usuarios=leArquivo("passwd");
-    cout<<"leu do arquivo :"<<usuarios<<endl;
-    string usuario,senha;
-    vector<string> combos= split(usuarios,';');
+bool login(char * nome,char * senha){
+    char * usuarios=leArquivo((char*)"passwd");
+    char * usuarioTemp;
+    char * senhaTemp;
+    vector<char* > combos= split(usuarios,';');
     for(int x=0;x<combos.size();x++){
-        usuario=split(combos[x],':')[0]+"";
-        senha=split(combos[x],':')[1]+"";
-        if(strcmp(usuario.c_str(),nomeDigitado)==0 && strcmp(senha.c_str(),criptografa(senhaDigitada))==0){
+        usuarioTemp=split(combos[x],':')[0];
+        senhaTemp=split(combos[x],':')[1];
+        //printf("usuarioTemp %s senhaTemp %s\n",usuarioTemp,senhaTemp);
+        if(strcmp(usuarioTemp,nome)==0 && strcmp(senhaTemp,criptografa(senha))==0){
             usuarioAtual=x;
-            printf("logado como %s\n",usuario.c_str());
+            printf("logado como %s\n",usuarioTemp);
             return true;
         }
     }
@@ -456,18 +476,18 @@ bool login(char * nomeDigitado,char * senhaDigitada){
 
 void addUser(char* nome,char * senha){
     if(usuarioAtual==0){
-        printf("vai começar o echo\n");
-        string atual=leArquivo((char*)"passwd");
-        string novoNome=nome;
-        printf("receu senha %s \n",senha);
+        char * atual=leArquivo((char*)"passwd");
         char * durr =criptografa(senha);
-        char temp[32];
-        strcpy(temp,durr);
-        string senhaCrip(temp);
-        cout<<"senhaCrip "<<senhaCrip<<endl;
-        string nova= atual+novoNome+":"+senhaCrip+";";
-        cout<<"nova = "<<nova<<endl;
-        echo(&(nova[0]),((char*)"passwd"));
+
+        char * nova = (char*)calloc(256,1);
+        strcpy(nova,atual);
+        strcat(nova,nome);
+        strcat(nova,":");
+        strcat(nova,criptografa(senha));
+        strcat(nova,";");
+        strcat(nova,"\0");
+        printf("nova : %s\n",nova);
+        echo(nova,((char*)"passwd"));
 
     }else{
         printf("apenas admin pode criar novos usuarios\n");
@@ -475,7 +495,10 @@ void addUser(char* nome,char * senha){
 }
 
 void novoGrupo(char * nome){
-   printf("reimplementar novo grupo");
+   char * temp = leArquivo((char*)"grupos");
+   strcat(temp,nome);
+   strcat(temp,";");
+   echo(temp,(char*)"grupos");
 }
 
 void insereNoGrupo(char* nomeGrupo,char* nome){
@@ -485,7 +508,7 @@ void insereNoGrupo(char* nomeGrupo,char* nome){
 bool * toBinario(char c){
     c=c-'0';
     int teste=c-'0';
-    bool retorno[3];
+    bool *retorno = (bool*) malloc(3);
     retorno[0]=CHECK_BIT(c, 0);
     retorno[1]=CHECK_BIT(c, 1);
     retorno[2]=CHECK_BIT(c, 2);
@@ -494,7 +517,7 @@ bool * toBinario(char c){
 }
 
 void chmod(int posicao,char * permissoes){
-    printf("chdmod recebeu %s\n",permissoes);
+    //printf("chdmod recebeu %s\n",permissoes);
     bool *arrayPermissoes;
     INode *inode=getINode(posicao);
     if(posicao==0 || inode->dono==usuarioAtual){  // só pode dar chmod se for o dono do arquivo ou estiver criando a raiz
@@ -513,7 +536,13 @@ void chmod(int posicao,char * permissoes){
 }
 
 bool pertenceAoGrupo(int posicao){
-    printf("pertence ao grupo foi suaceteado\n");
+    vector < char *> membros = split(split(leArquivo((char*)"grupos"),';')[posicao],',');  //melhor split
+    for(int x=1;x<membros.size();x++){
+        if(atoi(membros[x])==usuarioAtual){
+            return true;
+        }
+    }
+    return false;
 }
 
 bool verificaPermissao(int posicao,int operacao){
@@ -532,7 +561,7 @@ bool verificaPermissao(int posicao,int operacao){
 
 char * criptografa(char * senha){
     int tam=strlen(senha);
-    char teste[32];
+    char * teste = (char*) malloc(32);
     strcpy(teste,senha);
     for(int x=0;x<tam;x++){
         teste[x]+=3;
@@ -542,12 +571,43 @@ char * criptografa(char * senha){
     return teste;
 }
 
-void chown(int usuario,int arquivo){
-    printf("precisa atender a nova especificação");
+void chownArq(int usuario,int arquivo){
+    INode * inode = getINode(arquivo);
+    if(usuarioAtual==0 || inode->dono==usuarioAtual){
+        inode->dono=usuario;
+    }else{
+        printf("voce nao é o dono do arquivo nem o admin\n");
+    }
+}
+
+void chownGrupo(int grupo,int arquivo){
+    INode * inode = getINode(arquivo);
+    if(usuarioAtual==0 || inode->dono==usuarioAtual){
+        inode->grupo=grupo;
+    }else{
+        printf("voce nao é o dono do arquivo nem o admin\n");
+    }
+}
+
+char * getNomeUsuario(){
+    return split(split(leArquivo((char*)"passwd"),';')[usuarioAtual],':')[0];    //AWWW YEAH
+}
+
+void addtogroup(int usuario,int grupo){
+    vector<char *> grupos= split(leArquivo((char*)"grupos"),';');
+    char * temp = (char*)calloc(1024,1);
+    strcat(grupos[grupo],",");
+    char buffer[30];
+    sprintf(buffer,"%d",usuario);  // funcao obscura do stack overflow que converte um int em string
+    strcat(grupos[grupo],buffer);
+    for(int x=0;x<grupos.size()-1;x++){
+        strcat(temp,grupos[x]);
+        strcat(temp,";");
+    }
+    echo(temp,(char*)"grupos");
 }
 
 int main(){
-    printf("ponteiro de char : %d ponteiro de inode : %d",sizeof(char*),sizeof(INode*));
     printInfoDisco();
     printf("Bem vindo ao sistema de arquivos!\n");
 
@@ -567,7 +627,7 @@ int main(){
     int teste=10;
     bool logado=false;
     while(true){
-        printf("faça login(login) \ncrie um usuario(novoUsuario)  \ncrie um grupo (novoGrupo) \nadicione alguem a um grupo(insereNogrupo):\n");
+        printf("faça login(login)\n");
         scanf("%s",entrada);
         if(strcmp(entrada,(char*)"login")==0){
             printf("informe seu usuario:");
@@ -577,33 +637,37 @@ int main(){
             scanf("%s",senha);
             logado = login(entrada,senha); //login retorna true quando consegue logar
         }
-        if(strcmp(entrada,(char*)"novoUsuario")==0){
-            printf("escolha o nome do novo usuario: ");
-            char senha [32];
-            scanf(" %s",entrada);
-            printf("digite a senha: ");
-            scanf(" %s",senha);
-            addUser(entrada,senha);
-        }
-        if(strcmp(entrada,(char*)"novoGrupo")==0){
-            printf("digite o nome do grupo: ");
-            scanf(" %s",entrada);
-            novoGrupo(entrada);
-        }
-        if(strcmp(entrada,(char*)"insereNoGrupo")==0){
-            char nome[32],nomeGrupo[32];
-            printf("digite  o nome do usuario e o nome do grupo: ");
-            scanf("%s %s",nome,nomeGrupo);
-            insereNoGrupo(nome,nomeGrupo);
-        }
 
         while(logado){
-            printf("%s@MacBook Pro Retina Display 50': %s~$ ","usuarioAtual",geraArvoreDiretorio());
+            printf("%s@MacBook Pro Retina Display 50': %s~$ ",getNomeUsuario(),geraArvoreDiretorio());
             scanf(" %s",entrada);
             printf("leu entrada %s\n",entrada);
             if(strcmp(entrada,(char*)"mkdir")==0){
                 scanf(" %s",entrada);
                 mkdir(entrada);
+            }
+            if(strcmp(entrada,(char*)"addgroup")==0){
+                printf("digite o nome do grupo: ");
+                scanf(" %s",entrada);
+                novoGrupo(entrada);
+            }
+
+            if(strcmp(entrada,(char*)"adduser")==0){
+                printf("escolha o nome do novo usuario: ");
+                char senha [32];
+                scanf(" %s",entrada);
+                printf("digite a senha: ");
+                scanf(" %s",senha);
+                addUser(entrada,senha);
+            }
+
+            if(strcmp(entrada,(char*)"addtogroup")==0){
+                char usuario[32],grupo[32];
+                printf("digite o nome do grupo:");
+                scanf(" %s",grupo);
+                printf("digite o nome do usuario:");
+                scanf(" %s",usuario);
+                addtogroup(findPosUsuario(usuario),findPosGrupo(grupo));
             }
 
             if(strcmp(entrada,"touch")==0){
@@ -650,9 +714,13 @@ int main(){
             if(strcmp(entrada,(char*)"chown")==0){
                 char arquivo[32],usuario[32];
                 scanf("%s %s",usuario,arquivo);
+                chownArq(findPosUsuario(usuario),findPosINode(arquivo));
+            }
+            if(strcmp(entrada,(char*)"chgroup")==0){
+                char arquivo[32],grupo[32];
+                scanf("%s %s",grupo,arquivo);
                 printf("chown precisa ser reimplementado\n");
-                //chown(findPosUsuario(usuario),findPosINode(arquivo));
-
+                chownGrupo(findPosGrupo(grupo),findPosINode(arquivo));
             }
         }
     }
