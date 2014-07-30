@@ -9,7 +9,7 @@
 
 using namespace std;
 
-const int blocosPorINode=3;
+const int blocosPorINode=8;
 
 struct INode{
     char nome[32];
@@ -26,9 +26,9 @@ struct INode{
     bool permissoes[9];
 };
 
-const int tamBloco= 2;
+const int tamBloco= 16;
 const int numeroInodes = 256;
-const int numeroBlocos = 256;
+const int numeroBlocos = 512;
 const int tamINodes= sizeof(INode)*numeroInodes;
 const int tamGerVazioInodes = numeroInodes;
 const int tamGerVazioBlocos=numeroBlocos;
@@ -36,7 +36,6 @@ const int tamEspacoBlocos= numeroBlocos*tamBloco;
 const int tamDisco=tamINodes+tamGerVazioInodes+tamEspacoBlocos+tamGerVazioBlocos;
 
 int diretorioAtual=0;
-//FILE *arquivo;
 char *disco;
 int usuarioAtual;
 
@@ -63,12 +62,12 @@ int makeINode(bool dir,char * nome,bool expansao,int pai){
     int pos=findInodeLivre();
     INode *novo = getINode(pos);
     *getMapInode(pos)=true;
-    strcpy(novo->nome,nome);
     novo->diretorio=dir;
-    time(&novo->ultimaModificacao);  //FIXME: não funciona para criar inodes que serão usados como expansões de um arquivo o pai do arquivo tá errado que faz o adiociona referencia fazer merda
+    strcpy(novo->nome,nome);
+    novo->ultimaModificacao=time(NULL);  //FIXME: não funciona para criar inodes que serão usados como expansões de um arquivo o pai do arquivo tá errado que faz o adiociona referencia fazer merda
     limpaReferencias(pos);
-    novo->pai=pai;
     novo->expansao=expansao;
+    novo->pai=pai;
     novo->tamanho=0;
     novo->dono=usuarioAtual;
     novo->grupo=-1;
@@ -208,7 +207,11 @@ void liberaBlocos(int pos){
     INode* inode=getINode(pos);
     do{
         for(int x=0;x<blocosPorINode;x++){
-            *getMapBlocos(inode->enderDireto[x])=false;
+            if(inode->enderDireto[x]!=-1){
+                //printf("o problema é aqui talvez : %d \n",inode->enderDireto[x]);
+                *getMapBlocos(inode->enderDireto[x])=false;
+                //printf("nao é nao\n");
+            }
             inode->enderDireto[x]=-1;
         }
         if(inode->enderIndireto!=-1){
@@ -367,7 +370,13 @@ void ls(){
                     if((y+1)%3==0)
                         printf(" ");
                 }
-                printf(" %s \n",getINode(inode->enderDireto[x])->nome);  //mostra o nome do inode relacionado, caso exista
+                struct tm *aTime = localtime(&inode->ultimaModificacao);
+                int day = aTime->tm_mday;
+                int month = aTime->tm_mon + 1; // Month is 0 - 11, add 1 to get a jan-dec 1-12 concept
+                int year = aTime->tm_year + 1900; 
+                int hour = aTime->tm_hour;
+
+                printf(" %20s  %dh  %d/%d/%d\n",getINode(inode->enderDireto[x])->nome,hour,day,month,year);  //mostra o nome do inode relacionado, caso exista
 
             }
         }
@@ -416,7 +425,7 @@ void criaSistemaDeArquivos(){
     touch((char*)"passwd");
     addUser((char*)"admin",(char*)"admin");
     touch((char*)"grupos");
-    printf("criou arquivo grupos com texto : %s \n",leArquivo((char*)"grupos",true));
+    //printf("criou arquivo grupos com texto : %s \n",leArquivo((char*)"grupos",true));
     printf("Criou sistema de arquivos\n");
 }
 
@@ -443,6 +452,7 @@ int findBlocoLivre(){
 }
 
 INode* getINode(int posicao){
+   // printf("rodando getinode \n");
     if(posicao<0 || posicao>tamGerVazioInodes){
         printf("inode invalido\n");
         return NULL;
@@ -450,7 +460,7 @@ INode* getINode(int posicao){
     posicao=tamGerVazioBlocos+tamGerVazioInodes+(sizeof(INode)*posicao);
     //printf("posicao = %d\n",posicao);
     char * hurr = (char*) disco+posicao;
-
+    //printf("terminou geinode\n");
     return (INode*) hurr    ;
 }
 
@@ -661,29 +671,37 @@ int main(){
     usuarioAtual=0;
 
     // printf("arquivo passwd depois de criar o sistema de arquivos: %s\n\n",leArquivo((char*)"passwd",true));
-    int fd = open("dados.dat", O_RDWR);
-    if(fd == -1) {
-        fd = open("dados.dat", O_CREAT | O_RDWR);
-        printf("deu merda antes\n");
-        write(fd,0,tamDisco);
-        printf("deu merda depois\n");
-        chmod("dados.dat",0666);
-        if ((disco=(char*)mmap(NULL, tamDisco ,PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0)) < (char *)0) {
-                perror("mmap");
-                exit(1);
+    int mfd;
+    mfd=open("dados.dat", O_RDWR, 0666);
+    if(mfd==-1){
+        if ((mfd=open("dados.dat", O_RDWR|O_CREAT, 0666 )) < 0) {  /* abrir ficheiro */
+            perror("Erro a criar ficheiro");
+            exit(-1);
         }
-        printf("fez o mmap\n");
+        else {
+            printf("mfd = %d\n",mfd);
+            if (ftruncate(mfd, tamDisco) < 0) {                  /* definir tamanho */
+            perror("Erro no ftruncate");
+            exit(-1);
+            }
+        }
+        /* mapear ficheiro */
+        if ((disco=(char*)mmap(NULL, tamDisco, PROT_READ|PROT_WRITE, MAP_SHARED, mfd, 0)) < (char *)0) {
+            perror("Erro em mmap");
+            exit(-1);
+        }
         criaSistemaDeArquivos();
-        printf("rodou o cria sistema de arquivos\n");
-    }
-    else{   
-        if ((disco=(char*)mmap(NULL, tamDisco, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0)) < (char *)0) {
-                perror("mmap");
-                exit(1);
+    }else{
+        if ((disco=(char*)mmap(NULL, tamDisco, PROT_READ|PROT_WRITE, MAP_SHARED, mfd, 0)) < (char *)0) {
+            perror("Erro em mmap");
+            exit(-1);
         }
-        criaSistemaDeArquivos();  //comentar depois de resolver
-        diretorioAtual=0;
     }
+
+    /* aceder ao ficheiro atravÃ©s da memÃ³ria */
+    //for (int i=0; i<tamDisco; i++) disco[i]='A';
+        //criaSistemaDeArquivos();  //comentar depois de resolver
+        diretorioAtual=0;
 
 
 
@@ -799,5 +817,5 @@ int main(){
     }
     printf("sistema finalizado\n");
     munmap(disco, tamDisco);
-    close(fd);
+    close(mfd);
 }
