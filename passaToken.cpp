@@ -9,7 +9,8 @@ using namespace std;
 int main(int argc, char *argv[]){
 
 	int mainSocket; //Descritor do socket principal do servidor
-	int fdSocket; //Descritor do socket do cliente ou do socket efetivo do servidor
+	int socketEnvia; //Descritor do socket do cliente ou do socket efetivo do servidor
+	int socketRecebe;
 
 	//Estruturas auxiliares do socket
 	struct sockaddr_in socketAddr;
@@ -23,15 +24,21 @@ int main(int argc, char *argv[]){
 		cout<<"FIRST!"<<endl;
 	}else
 		first =false;
-
+	char espera;
 	sockLen = sizeof(socketAddr);
 	mainSocket=openConnection(PORT,0);	//Abre conexão principal
-	fdSocket=acceptConnection(mainSocket, sockLen); //Espera por conexões
-	fdSocket=tryConnection(argv[1], PORT, 0); //Tenta conectar ao proximo
+	cin>>espera;
+	if(first){
+		socketEnvia=tryConnection(argv[1], PORT, 0); //Tenta conectar ao proximo
+		socketRecebe=acceptConnection(mainSocket, sockLen); //Espera por conexões	
+	}else{
+		socketRecebe=acceptConnection(mainSocket, sockLen); //Espera por conexões
+		socketEnvia=tryConnection(argv[1], PORT, 0); //Tenta conectar ao proximo
+	}
 	while(true){
 		if(!first){
 			cout<<"esperando token..."<<endl;
-			receiveMessage(fdSocket,message,20*sizeof(char)); //Recebe mensagem
+			receiveMessage(socketRecebe,message,20*sizeof(char)); //Recebe mensagem
 			cout<<"recebeu token"<<endl;
 			if(rand()%100<50){
 				cout<<"enviando dados"<<endl;
@@ -41,16 +48,15 @@ int main(int argc, char *argv[]){
 				cout<<"sem dados para enviar"<<endl;
 			}
 			usleep(10000); //so pra nao ficar muito rapido
-			sendMessage(fdSocket,message,20*sizeof(char)); //Envia mensagem
+			sendMessage(socketEnvia,message,20*sizeof(char)); //Envia mensagem
 			cout<<"passou o token"<<endl;
 		}else{
 			first =false;
 		}		
 	}
-		closeConnection(fdSocket); //Fecha socket com o cliente
-		closeConnection(mainSocket); //Fecha socket principal
-
-	
+	closeConnection(socketEnvia); //Fecha socket com o cliente
+	closeConnection(socketRecebe); //Fecha socket com o cliente
+	closeConnection(mainSocket); //Fecha socket principal
 
 	return 0;
 
