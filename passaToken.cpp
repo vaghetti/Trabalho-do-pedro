@@ -44,7 +44,7 @@ int main(int argc, char *argv[]){
 			if(rand()%100<50){
 				cout<<"enviando dados"<<endl;
 				usleep(3000000);
-				cout<<"dados enviados";
+				cout<<"dados enviados"<<endl;
 			}else{
 				cout<<"sem dados para enviar"<<endl;
 			}
