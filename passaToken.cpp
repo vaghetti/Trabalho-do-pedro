@@ -35,6 +35,7 @@ int main(int argc, char *argv[]){
 		socketRecebe=acceptConnection(mainSocket, sockLen); //Espera por conexões
 		socketEnvia=tryConnection(argv[1], PORT, 0); //Tenta conectar ao proximo
 	}
+	cout<<"conenctado com "<<argv[1]<endl;
 	while(true){
 		if(!first){
 			cout<<"esperando token..."<<endl;
@@ -51,6 +52,8 @@ int main(int argc, char *argv[]){
 			sendMessage(socketEnvia,message,20*sizeof(char)); //Envia mensagem
 			cout<<"passou o token"<<endl;
 		}else{
+			cout<<"enviando token"<<endl;
+			sendMessage(socketEnvia,message,20*sizeof(char)); //Envia mensagem
 			first =false;
 		}		
 	}
