@@ -126,6 +126,9 @@ int main(int argc, char *argv[]){
 	//Estruturas auxiliares do socket
 	struct sockaddr_in socketAddr;
 	socklen_t sockLen;
+	
+	for(int x=0;x<QUADROS;x++)
+		confirmado[x]=0;
 
 	char message[MAXSIZE]; 	//String para troca de mensagens
 	pthread_t threadRecebedor,threadEnviador;
