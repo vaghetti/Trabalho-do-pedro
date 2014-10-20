@@ -53,7 +53,7 @@ public class Principal {
         }
     }
         
-    //TODO: arrumar o say!
+    //Gambiarra copiada diretamente do stack overflow para obtensão de IP
      public static  String say(){    
         Enumeration e;
         String retorno="";
@@ -67,7 +67,6 @@ public class Principal {
                 while (ee.hasMoreElements())
                 {
                     InetAddress i = (InetAddress) ee.nextElement();
-                    System.out.println(i.getHostAddress());
                     cont++;
                     if(cont==2){
                         return i.getHostAddress();
