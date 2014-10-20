@@ -4,6 +4,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,7 +25,13 @@ public class AtualizaPing extends Thread {
             input.readLine(); //recebe o hello de volta
             tempo=System.currentTimeMillis()-tempo;
             synchronized(Principal.LockMatrizEDados){
-                System.out.println("calculou pos = "+Principal.mapaIPs.get(IPvizinho));
+                System.out.println("PINGADOR: MAPA: ");
+                for (Map.Entry<String, Integer> entrySet : Principal.mapaIPs.entrySet()) {
+                    String key = entrySet.getKey();
+                    int value = entrySet.getValue();
+                    System.out.println("PINGADOR: "+key+" val = "+value);
+                }
+                System.out.println("PINGADOOR: calculou pos = "+Principal.mapaIPs.get(IPvizinho));
                 Principal.pesos[0][Principal.mapaIPs.get(IPvizinho)][0]=tempo;
                 Principal.pesos[0][Principal.mapaIPs.get(IPvizinho)][1]=System.currentTimeMillis();
             }
