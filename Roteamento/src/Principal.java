@@ -1,6 +1,12 @@
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.Enumeration;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.JOptionPane;
 
@@ -48,14 +54,27 @@ public class Principal {
     }
         
     //TODO: arrumar o say!
-     public static  String say()   {    
-        try {    
-            java.net.InetAddress i = java.net.InetAddress.getLocalHost();    
-            String ip = i.getHostAddress();    
-            return ip;   
-        }    
-        catch(UnknownHostException e){e.printStackTrace();  
-        return "NO-IP";}    
+     public static  String say(){    
+        Enumeration e;
+        String retorno="";
+        try {
+            e = NetworkInterface.getNetworkInterfaces();
+            
+            while(e.hasMoreElements())
+            {
+                NetworkInterface n = (NetworkInterface) e.nextElement();
+                Enumeration ee = n.getInetAddresses();
+                while (ee.hasMoreElements())
+                {
+                    InetAddress i = (InetAddress) ee.nextElement();
+                    System.out.println(i.getHostAddress());
+                    retorno+=i.getHostAddress()+'\n';
+                }
+            }
+        } catch (SocketException ex) {
+            Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return retorno;
       }    
 
 }
