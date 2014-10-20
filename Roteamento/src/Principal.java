@@ -1,14 +1,25 @@
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.Map;
 
 import javax.swing.JOptionPane;
 
 
 public class Principal {
-    static int[][] pesos;
-    public static int portaIP = 9090;
+    public static long[][][] pesos;
+    public static int portaPing = 9090;
+    public static int portaDados = 9091;
+    public static int portaMensagens = 9092;
+    public static int Ncomputadores = 5;
+    public static Map<String,Integer> mapaIPs;
+    public static Integer NComputadoresConhecidos=0;
+    public static final Object LockMatrizEDados= new Object();
 
     public static void main(String[] args) {
+        pesos = new long[Ncomputadores][Ncomputadores][2];
+        //primeira coluna = peso
+        //segunda = hora em que este peso foi lido
+        
         try {
             System.out.println("Começou o programa!");
             RespondedorPing respondedorPing= new RespondedorPing();
@@ -19,11 +30,24 @@ public class Principal {
                 return;
             }
             pingador.start();
+            PropagadorDados propagadorDados = new PropagadorDados(args);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
     
+    private void initMapa(String[] IPsVizinhos){
+        synchronized(LockMatrizEDados){
+            mapaIPs.put(say(), 0);
+            NComputadoresConhecidos++;
+            for(int x=1;x<IPsVizinhos.length;x++){
+                mapaIPs.put(IPsVizinhos[x], NComputadoresConhecidos);
+                NComputadoresConhecidos++;
+            }
+        }
+    }
+        
+    //TODO: arrumar o say!
      public static  String say()   {    
         try {    
             java.net.InetAddress i = java.net.InetAddress.getLocalHost();    

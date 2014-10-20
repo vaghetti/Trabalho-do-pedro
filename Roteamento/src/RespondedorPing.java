@@ -19,6 +19,6 @@ public class RespondedorPing extends Thread{
         }
     }
     public RespondedorPing() throws IOException{
-        servidor = new ServerSocket(Principal.portaIP);	 
+        servidor = new ServerSocket(Principal.portaPing);	 
     }
 }

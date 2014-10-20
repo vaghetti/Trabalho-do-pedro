@@ -25,7 +25,6 @@ public class AtualizaPing extends Thread {
             tempo=System.currentTimeMillis()-tempo;
             System.out.println("PINGADOR: Calculou ping para "+IPvizinho+" como sendo "+tempo);
             vizinho.close();
-
         } catch ( NumberFormatException | SocketException e) {
             //e.printStackTrace();
             System.out.println("PINGADOR: Erro no pedido de ping");
@@ -36,7 +35,7 @@ public class AtualizaPing extends Thread {
 
 
     public AtualizaPing(String IPvizinho) throws IOException{
-        vizinho=new Socket(IPvizinho,Principal.portaIP);
+        vizinho=new Socket(IPvizinho,Principal.portaPing);
         input =new BufferedReader(new InputStreamReader(vizinho.getInputStream()));
         out =new PrintWriter(vizinho.getOutputStream(), true);
         this.IPvizinho=IPvizinho;

@@ -1,5 +1,4 @@
 import java.io.IOException;
-import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 
 //Thread que fica pedidndo o ping de cada um dos vizinhos
@@ -12,7 +11,7 @@ public class Pingador extends Thread {
             while(true){
                 System.out.println("PINGADOR: Pingando todos vizinhos");
                 for(int x=0;x<IPsVizinhos.length;x++){
-                        new AtualizaPing(IPsVizinhos[x]).start();  //manda o ip do vizinho para ober o novo ping
+                    new AtualizaPing(IPsVizinhos[x]).start();  //manda o ip do vizinho para ober o novo ping
                 }
                 Thread.sleep(tempoEspera*1000);
             }
