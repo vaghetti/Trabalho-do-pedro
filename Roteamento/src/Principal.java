@@ -57,9 +57,9 @@ public class Principal {
      public static  String say(){    
         Enumeration e;
         String retorno="";
+        int cont=0;
         try {
             e = NetworkInterface.getNetworkInterfaces();
-            
             while(e.hasMoreElements())
             {
                 NetworkInterface n = (NetworkInterface) e.nextElement();
@@ -68,8 +68,13 @@ public class Principal {
                 {
                     InetAddress i = (InetAddress) ee.nextElement();
                     System.out.println(i.getHostAddress());
-                    retorno+=i.getHostAddress()+'\n';
+                    cont++;
+                    if(cont==2){
+                        return i.getHostAddress();
+                        
+                    }
                 }
+                    
             }
         } catch (SocketException ex) {
             Logger.getLogger(Principal.class.getName()).log(Level.SEVERE, null, ex);
