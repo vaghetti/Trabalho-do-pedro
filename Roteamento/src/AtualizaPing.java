@@ -24,6 +24,7 @@ public class AtualizaPing extends Thread {
             input.readLine(); //recebe o hello de volta
             tempo=System.currentTimeMillis()-tempo;
             synchronized(Principal.LockMatrizEDados){
+                System.out.println("calculou pos = "+Principal.mapaIPs.get(IPvizinho));
                 Principal.pesos[0][Principal.mapaIPs.get(IPvizinho)][0]=tempo;
                 Principal.pesos[0][Principal.mapaIPs.get(IPvizinho)][1]=System.currentTimeMillis();
             }
