@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.net.UnknownHostException;
 
 import javax.swing.JOptionPane;
 
@@ -13,14 +14,24 @@ public class Principal {
             RespondedorPing respondedorPing= new RespondedorPing();
             respondedorPing.start();
             Pingador pingador = new Pingador(args);  //os ips dos vizinhos sao recebidos como argumentos
-            if(JOptionPane.showConfirmDialog(null, "iniciar operação?") == JOptionPane.CANCEL_OPTION){
-                    return;
+            //TODO: mostrar o ip na caixinha de dialogo
+            if(JOptionPane.showConfirmDialog(null, "iniciar operação?"+say()) == JOptionPane.CANCEL_OPTION){
+                return;
             }
             pingador.start();
-
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+    
+     public static  String say()   {    
+        try {    
+            java.net.InetAddress i = java.net.InetAddress.getLocalHost();    
+            String ip = i.getHostAddress();    
+            return ip;   
+        }    
+        catch(UnknownHostException e){e.printStackTrace();  
+        return "NO-IP";}    
+      }    
 
 }
