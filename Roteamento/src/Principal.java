@@ -4,6 +4,7 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -13,9 +14,9 @@ import javax.swing.JOptionPane;
 
 public class Principal {
     public static long[][][] pesos;
-    public static int portaPing = 9090;
-    public static int portaDados = 9091;
-    public static int portaMensagens = 9092;
+    public static int portaPing = 9093;
+    public static int portaDados = 9094;
+    public static int portaMensagens = 9095;
     public static int Ncomputadores = 5;
     public static Map<String,Integer> mapaIPs;
     public static Integer NComputadoresConhecidos=0;
@@ -43,6 +44,7 @@ public class Principal {
     }
     
     private static void initMapa(String[] IPsVizinhos){
+        mapaIPs = new HashMap();
         synchronized(LockMatrizEDados){
             mapaIPs.put(say(), 0);
             NComputadoresConhecidos++;
