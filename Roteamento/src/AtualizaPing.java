@@ -20,7 +20,7 @@ public class AtualizaPing extends Thread {
             tempo=System.currentTimeMillis();
             input.readLine(); //recebe o hello de volta
             tempo=System.currentTimeMillis()-tempo;
-            System.out.println("PINGADR: Calculou ping para "+IPvizinho+" como sendo "+tempo);
+            System.out.println("PINGADOR: Calculou ping para "+IPvizinho+" como sendo "+tempo);
             vizinho.close();
 
         } catch (IOException | NumberFormatException e) {
