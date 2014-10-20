@@ -25,7 +25,7 @@ public class Principal {
         pesos = new long[Ncomputadores][Ncomputadores][2];
         //primeira coluna = peso
         //segunda = hora em que este peso foi lido
-        
+        initMapa(args);
         try {
             System.out.println("Começou o programa!");
             RespondedorPing respondedorPing= new RespondedorPing();
@@ -42,7 +42,7 @@ public class Principal {
         }
     }
     
-    private void initMapa(String[] IPsVizinhos){
+    private static void initMapa(String[] IPsVizinhos){
         synchronized(LockMatrizEDados){
             mapaIPs.put(say(), 0);
             NComputadoresConhecidos++;
