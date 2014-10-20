@@ -3,6 +3,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.SocketException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 //Thread que atualiza o ping de um vizinho especifico
@@ -23,9 +26,11 @@ public class AtualizaPing extends Thread {
             System.out.println("PINGADOR: Calculou ping para "+IPvizinho+" como sendo "+tempo);
             vizinho.close();
 
-        } catch (IOException | NumberFormatException e) {
+        } catch ( NumberFormatException | SocketException e) {
             //e.printStackTrace();
             System.out.println("PINGADOR: Erro no pedido de ping");
+        } catch (IOException ex) {
+            Logger.getLogger(AtualizaPing.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
