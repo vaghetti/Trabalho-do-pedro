@@ -52,6 +52,12 @@ public class Principal {
                 mapaIPs.put(IPsVizinhos[x], NComputadoresConhecidos);
                 NComputadoresConhecidos++;
             }
+            System.out.println("PRINCIPAL: formou o mapa: ");
+            for (Map.Entry<String, Integer> entrySet : Principal.mapaIPs.entrySet()) {
+                String key = entrySet.getKey();
+                int value = entrySet.getValue();
+                System.out.println("PRINCIPAL: "+key+" val = "+value);
+            }
         }
     }
         
