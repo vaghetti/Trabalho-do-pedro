@@ -24,6 +24,7 @@ public class AtualizaPing extends Thread {
             tempo=System.currentTimeMillis();
             input.readLine(); //recebe o hello de volta
             tempo=System.currentTimeMillis()-tempo;
+            System.out.println("PINGADOR: erro no synchronized");
             synchronized(Principal.LockMatrizEDados){
                 System.out.println("PINGADOR: MAPA: ");
                 for (Map.Entry<String, Integer> entrySet : Principal.mapaIPs.entrySet()) {
