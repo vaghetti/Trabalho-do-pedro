@@ -23,14 +23,16 @@ public class AtualizaPing extends Thread {
             tempo=System.currentTimeMillis();
             input.readLine(); //recebe o hello de volta
             tempo=System.currentTimeMillis()-tempo;
+            synchronized(Principal.LockMatrizEDados){
+                Principal.pesos[0][Principal.mapaIPs.get(IPvizinho)][0]=tempo;
+                Principal.pesos[0][Principal.mapaIPs.get(IPvizinho)][1]=System.currentTimeMillis();
+            }
             System.out.println("PINGADOR: Calculou ping para "+IPvizinho+" como sendo "+tempo);
             vizinho.close();
-        } catch ( NumberFormatException | SocketException e) {
-            //e.printStackTrace();
+        } catch ( NumberFormatException | IOException e) {
             System.out.println("PINGADOR: Erro no pedido de ping");
-        } catch (IOException ex) {
-            Logger.getLogger(AtualizaPing.class.getName()).log(Level.SEVERE, null, ex);
         }
+        
     }
 
 
@@ -39,13 +41,5 @@ public class AtualizaPing extends Thread {
         input =new BufferedReader(new InputStreamReader(vizinho.getInputStream()));
         out =new PrintWriter(vizinho.getOutputStream(), true);
         this.IPvizinho=IPvizinho;
-    }
-
-
-    public long getTempo() throws InterruptedException {
-        while(this.isAlive()){
-            Thread.sleep(100);
-        }
-        return tempo;
     }
 }
