@@ -24,7 +24,8 @@ public class AtualizaPing extends Thread {
             vizinho.close();
 
         } catch (IOException | NumberFormatException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
+            System.out.println("PINGADOR: Erro no pedido de ping");
         }
     }
 
