@@ -59,7 +59,7 @@ public class Dijkstrador extends Thread{
                 }
                 if(v<0 || best[v]==Long.MAX_VALUE)
                     break;
-                
+                visited[v]=true;
                 for(int i=0;i<Principal.Ncomputadores;i++){
                     long w = Principal.pesos[v][i][0];
                     
