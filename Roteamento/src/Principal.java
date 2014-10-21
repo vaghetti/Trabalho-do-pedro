@@ -16,7 +16,7 @@ public class Principal {
     public static int portaPing = 9093;
     public static int portaDados = 9094;
     public static int portaMensagens = 9095;
-    public static int Ncomputadores = 5;
+    public static int Ncomputadores = 6;
     public static Map<String,Integer> mapaIPs;
     public static Integer NComputadoresConhecidos=0;
     public static final Object LockMatrizEDados= new Object();
