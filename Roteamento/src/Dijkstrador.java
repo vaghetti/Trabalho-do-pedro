@@ -39,7 +39,7 @@ public class Dijkstrador extends Thread{
             best = new long[Principal.Ncomputadores];
             boolean[] visited = new boolean[Principal.Ncomputadores];
             anterior = new int[Principal.Ncomputadores];
-            int max = 10000; // Infinity equivalent.
+            long max = Long.MAX_VALUE; // Infinity equivalent.
             for (int i = 0; i < Principal.Ncomputadores; i++)
             {
                 best[i] = max;
@@ -47,28 +47,29 @@ public class Dijkstrador extends Thread{
             }
 
             best[0] = 0; // Changed the 0 to variable start.
+            anterior[0]=-1;
 
-            for(int i = 0; i < Principal.Ncomputadores; i++)
+            while(true)
             {
-                long min = max;
-                int currentNode = 0;
+                int v = -1;
                 for (int j = 0; j < Principal.Ncomputadores; j++)
                 {
-                    if (!visited[j] && best[j] < min)
-                    {
-                        currentNode = j;
-                        min = best[j];
+                    if(!visited[j] && ( v<0 || best[j]<best[v])) 
+                        v=j;
+                }
+                if(v<0 || best[v]==Long.MAX_VALUE)
+                    break;
+                
+                for(int i=0;i<Principal.Ncomputadores;i++){
+                    long w = Principal.pesos[v][i][0];
+                    
+                    if(best[i]>best[v]+w){
+                        best[i]=best[v]+w;
+                        anterior[i]=v;
                     }
                 }
-                visited[currentNode] = true;
-                for (int j = 0; j < Principal.Ncomputadores; j++)
-                {
-                    if (Principal.pesos[currentNode][j][0] < max && best[currentNode] +   Principal.pesos[currentNode][j][0] < best[j])
-                    {
-                        best[j] = best[currentNode] + Principal.pesos[currentNode][j][0];
-                        anterior[j]  = currentNode;
-                    }
-                }
+                
+                
             }
         }
     }
