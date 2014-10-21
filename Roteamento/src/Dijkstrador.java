@@ -20,7 +20,8 @@ public class Dijkstrador extends Thread{
             while(true){
                 Thread.sleep(intervalo*1000);
                 synchronized(Principal.LockMatrizEDados){
-                    if(Principal.NComputadoresConhecidos == Principal.Ncomputadores){
+                    if(Principal.NComputadoresConhecidos < Principal.Ncomputadores){
+                        System.out.println("DIJKSTRADOR: dijkstrador nao fez nada, tabela ainda nao esta completa nComputadoresConhecidos ="+Principal.NComputadoresConhecidos+" N computadores = "+Principal.Ncomputadores);
                         continue;  //so faz o dijktra se tiver todas informaçoes
                     }
                 }
