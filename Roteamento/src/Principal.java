@@ -39,6 +39,7 @@ public class Principal {
             }
             pingador.start();
             PropagadorDados propagadorDados = new PropagadorDados(args);
+            propagadorDados.start();
         } catch (IOException e) {
             e.printStackTrace();
         }

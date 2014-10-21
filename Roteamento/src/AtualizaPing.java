@@ -22,32 +22,9 @@ public class AtualizaPing extends Thread {
             System.out.println("PINGADOR: Pingando "+IPvizinho);
             out.println("HELLO");
             tempo=System.currentTimeMillis();
-            
-            String teste = input.readLine(); //recebe o hello de volta
-            
+            input.readLine(); //recebe o hello de volta
             tempo=System.currentTimeMillis()-tempo;
-            
-            
-            System.out.println("PINGADOR: erro no synchronized leu "+teste);
-            
-            
-            
-            
-            
-            for (Map.Entry<String, Integer> entrySet : Principal.mapaIPs.entrySet()) {
-                    String key = entrySet.getKey();
-                    int value = entrySet.getValue();
-                    System.out.println("PINGADOR: "+key+" val = "+value);
-                }
-            
-            
             synchronized(Principal.LockMatrizEDados){
-                System.out.println("PINGADOR: MAPA: ");
-                for (Map.Entry<String, Integer> entrySet : Principal.mapaIPs.entrySet()) {
-                    String key = entrySet.getKey();
-                    int value = entrySet.getValue();
-                    System.out.println("PINGADOR: "+key+" val = "+value);
-                }
                 System.out.println("PINGADOOR: calculou pos = "+Principal.mapaIPs.get(IPvizinho)+" para o ip "+IPvizinho);
                 Principal.pesos[0][Principal.mapaIPs.get(IPvizinho)][0]=tempo;
                 Principal.pesos[0][Principal.mapaIPs.get(IPvizinho)][1]=System.currentTimeMillis();
