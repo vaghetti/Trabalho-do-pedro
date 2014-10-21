@@ -28,22 +28,25 @@ public class RecebedorMensagem extends Thread {
                 
                 if(mensagem[0].equals(Principal.say())){
                     System.out.println("RECEBEDORMENSAGEM: recebeu a mensagem "+mensagem[2]+" de "+mensagem[1]);
+                    JOptionPane.showMessageDialog(null, "Você recebeu a mensagem \n"+ mensagem[2]+"\n de: "+mensagem[1]);
                 }else{
                     synchronized(Dijkstrador.anterior){
                         int anterior = Dijkstrador.anterior[Principal.mapaIPs.get(mensagem[0])];
                         Socket repassa = null;
                         if(anterior==-1){  //se esta em um dos vizinhos do computador que deve receber a mensagem
                             repassa = new Socket(mensagem[0],Principal.portaMensagens);
-                            JOptionPane.showMessageDialog(null, "Você recebeu a mensagem \n"+ mensagem[2]+"\n de: "+mensagem[1]);
+                            JOptionPane.showMessageDialog(null,"encaminhou mensagem "+mensagem[2]+" de "+mensagem[0]+" para "+mensagem[0]);
                         }else{ //se nao for um dos vizinhos
+                            System.out.println("RECEBEDORMENSAGEM: anterior = "+anterior);
                             while(Dijkstrador.anterior[anterior]!=0){
                                 anterior = Dijkstrador.anterior[anterior];
+                                System.out.println("RECEBEDORMENSAGEM: anterior = "+anterior);
                             }
                             for(Map.Entry<String, Integer> entry : Principal.mapaIPs.entrySet()) {
                                 String key = entry.getKey();
                                 int value = entry.getValue();
                                 if(value == anterior){
-                                    JOptionPane.showMessageDialog(null,"RECEBEDORMENSAGEM: encaminhou mensagem "+mensagem[2]+" de "+mensagem[0]+" para "+mensagem[0] + "atravez de "+key);
+                                    JOptionPane.showMessageDialog(null,"encaminhou mensagem "+mensagem[2]+" de "+mensagem[0]+" para "+mensagem[0] + "atravez de "+key);
                                     repassa = new Socket(key,Principal.portaMensagens);
                                     break;
                                 }
