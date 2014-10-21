@@ -49,6 +49,8 @@ public class Principal {
             Dijkstrador dijktrador = new Dijkstrador();
             dijktrador.start();
             Thread.sleep(10*1000);
+            EnviadorMensagem enviadorMensagem = new EnviadorMensagem();
+            enviadorMensagem.start();
             
         } catch (InterruptedException | IOException ex) {
             ex.printStackTrace();
