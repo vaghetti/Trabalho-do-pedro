@@ -57,10 +57,16 @@ public class Principal {
                 NComputadoresConhecidos++;
             }
             System.out.println("PRINCIPAL: formou o mapa: ");
-            for (Map.Entry<String, Integer> entrySet : Principal.mapaIPs.entrySet()) {
+            for (Map.Entry<String, Integer> entrySet : mapaIPs.entrySet()) {
                 String key = entrySet.getKey();
                 int value = entrySet.getValue();
                 System.out.println("PRINCIPAL: "+key+" val = "+value);
+            }
+            for (int y = 0; y <Ncomputadores; y++) {
+                for (int x = 0; x < Ncomputadores; x++) {
+                    pesos[x][y][0]=Long.MAX_VALUE;
+                    pesos[x][y][1]=System.currentTimeMillis();
+                }
             }
         }
     }
