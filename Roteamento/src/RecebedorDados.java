@@ -53,7 +53,11 @@ public class RecebedorDados extends Thread {
                 pares = aux[y].split(":");
                 for(int x=0;x<numeroDeIps;x++){
                     par = pares[x].split(",");
-                    peso = Long.parseLong(par[0]);
+                    if(par[0].equals("MAX")){
+                        peso = Long.MAX_VALUE;
+                    }else{
+                        peso = Long.parseLong(par[0]);
+                    }
                     tempo = Long.parseLong(par[1]);
                     //System.out.println("RECEBEDORDADOS: parser leu tempo :"+tempo+" e peso "+ peso+" de "+vetorIPs[x]+ " ate "+vetorIPs[y]);
                     if(Principal.pesos[Principal.mapaIPs.get(vetorIPs[x])][Principal.mapaIPs.get(vetorIPs[y])][1] > tempo && peso!=Long.MAX_VALUE){

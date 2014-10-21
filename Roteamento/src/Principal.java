@@ -20,6 +20,7 @@ public class Principal {
     public static Map<String,Integer> mapaIPs;
     public static Integer NComputadoresConhecidos=0;
     public static final Object LockMatrizEDados= new Object();
+    
 
     public static void main(String[] args) {
         pesos = new long[Ncomputadores][Ncomputadores][2];

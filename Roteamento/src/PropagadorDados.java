@@ -62,7 +62,10 @@ public class PropagadorDados extends Thread {
                 for(int x=0;x<Principal.NComputadoresConhecidos;x++){
                     if(x!=0)
                         dados+=":";
-                    dados+=Principal.pesos[x][y][0]+","+Principal.pesos[x][y][1];
+                    if(Principal.pesos[x][y][0]==Long.MAX_VALUE)
+                        dados+="MAX"+","+Principal.pesos[x][y][1];
+                    else
+                        dados+=Principal.pesos[x][y][0]+","+Principal.pesos[x][y][1];
                 }
                 dados+=";";
             }
