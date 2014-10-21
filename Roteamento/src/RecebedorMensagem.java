@@ -7,6 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Map;
 import javax.lang.model.type.PrimitiveType;
+import javax.swing.JOptionPane;
 
 /*
  * PROTOCOLO DE MENSAGEM
@@ -33,7 +34,7 @@ public class RecebedorMensagem extends Thread {
                         Socket repassa = null;
                         if(anterior==0){  //se esta em um dos vizinhos do computador que deve receber a mensagem
                             repassa = new Socket(mensagem[0],Principal.portaMensagens);
-                            System.out.println("RECEBEDORMENSAGEM: encaminhou mensagem"+mensagem[2]+" para "+mensagem[0]);
+                            JOptionPane.showMessageDialog(null, "Você recebeu a mensagem \n"+ mensagem[2]+"\n de: "+mensagem[1]);
                         }else{ //se nao for um dos vizinhos
                             while(Dijkstrador.anterior[anterior]!=0){
                                 anterior = Dijkstrador.anterior[anterior];

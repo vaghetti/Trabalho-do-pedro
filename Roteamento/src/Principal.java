@@ -22,7 +22,7 @@ public class Principal {
     public static final Object LockMatrizEDados= new Object();
     public static long inicio;
     public static long MAX = Integer.MAX_VALUE;
-    
+    public static boolean fezPrimeiroDijkstra=false;
 
     public static void main(String[] args) {
         inicio = System.currentTimeMillis();
@@ -30,7 +30,6 @@ public class Principal {
         //primeira coluna = peso
         //segunda = hora em que este peso foi lido
         initMapa(args);
-        
         try {
             System.out.println("Começou o programa!");
             RespondedorPing respondedorPing= new RespondedorPing();
@@ -39,6 +38,8 @@ public class Principal {
             recebedorDados.start();
             Pingador pingador = new Pingador(args);  //os ips dos vizinhos sao recebidos como argumentos
             //TODO: mostrar o ip na caixinha de dialogo
+            RecebedorMensagem recebedorMensagem= new RecebedorMensagem();
+            recebedorMensagem.start();
             if(JOptionPane.showConfirmDialog(null, "iniciar operação?"+say()) == JOptionPane.CANCEL_OPTION){
                 return;
             }
@@ -47,8 +48,10 @@ public class Principal {
             propagadorDados.start();
             Dijkstrador dijktrador = new Dijkstrador();
             dijktrador.start();
-        } catch (IOException e) {
-            e.printStackTrace();
+            Thread.sleep(10*1000);
+            
+        } catch (InterruptedException | IOException ex) {
+            ex.printStackTrace();
         }
     }
     
