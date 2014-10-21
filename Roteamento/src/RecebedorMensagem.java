@@ -28,7 +28,7 @@ public class RecebedorMensagem extends Thread {
                 
                 if(mensagem[0].equals(Principal.say())){
                     System.out.println("RECEBEDORMENSAGEM: recebeu a mensagem "+mensagem[2]+" de "+mensagem[1]);
-                    JOptionPane.showMessageDialog(null, "Você recebeu a mensagem \n"+ mensagem[2]+"\n de: "+mensagem[1]);
+                    new ThreadCriaJanela("Você recebeu a mensagem \n"+ mensagem[2]+"\n de: "+mensagem[1]).start();
                 }else{
                     synchronized(Dijkstrador.anterior){
                         int anterior = Principal.mapaIPs.get(mensagem[0]);
@@ -42,7 +42,7 @@ public class RecebedorMensagem extends Thread {
                             String key = entry.getKey();
                             int value = entry.getValue();
                             if(value == anterior){
-                                JOptionPane.showMessageDialog(null,"encaminhou mensagem "+mensagem[2]+" de "+mensagem[0]+" para "+mensagem[0] + "atravez de "+key);
+                                new ThreadCriaJanela("encaminhou mensagem "+mensagem[2]+" de "+mensagem[1]+" para "+mensagem[0] + "atravez de "+key).start();
                                 repassa = new Socket(key,Principal.portaMensagens);
                                 break;
                             }
