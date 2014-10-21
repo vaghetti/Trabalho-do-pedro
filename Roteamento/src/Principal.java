@@ -44,6 +44,8 @@ public class Principal {
             pingador.start();
             PropagadorDados propagadorDados = new PropagadorDados(args);
             propagadorDados.start();
+            Dijkstrador dijktrador = new Dijkstrador();
+            dijktrador.start();
         } catch (IOException e) {
             e.printStackTrace();
         }
