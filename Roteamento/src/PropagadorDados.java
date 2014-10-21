@@ -26,6 +26,16 @@ public class PropagadorDados extends Thread {
                     out.println(dados);
                     conexao.close();
                 }
+                for(int y=0;y<Principal.NComputadoresConhecidos;y++){
+                    for (int x = 0; x < Principal.NComputadoresConhecidos; x++) {
+                        if(Principal.pesos[x][y][0]==Long.MAX_VALUE){
+                            System.out.print("MAX ");
+                        }else{
+                            System.out.print(Principal.pesos[x][y][0]+" ");
+                        }
+                    }
+                    System.out.println("");
+                }
                 Thread.sleep(espera*1000);
             }
         }catch(InterruptedException | IOException   e){
