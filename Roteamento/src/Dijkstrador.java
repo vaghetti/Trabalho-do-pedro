@@ -54,10 +54,10 @@ public class Dijkstrador extends Thread{
             best = new long[Principal.Ncomputadores];
             boolean[] visited = new boolean[Principal.Ncomputadores];
             anterior = new int[Principal.Ncomputadores];
-            long max = Long.MAX_VALUE; // Infinity equivalent.
+            
             for (int i = 0; i < Principal.Ncomputadores; i++)
             {
-                best[i] = max;
+                best[i] = Principal.MAX;
                 visited[i] = false;
             }
 
@@ -72,7 +72,7 @@ public class Dijkstrador extends Thread{
                     if(!visited[j] && ( v<0 || best[j]<best[v])) 
                         v=j;
                 }
-                if(v<0 || best[v]==Long.MAX_VALUE)
+                if(v<0 || best[v]==Principal.MAX)
                     break;
                 visited[v]=true;
                 for(int i=0;i<Principal.Ncomputadores;i++){

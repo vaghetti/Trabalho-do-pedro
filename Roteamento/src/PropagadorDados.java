@@ -28,7 +28,7 @@ public class PropagadorDados extends Thread {
                 }
                 for(int y=0;y<Principal.NComputadoresConhecidos;y++){
                     for (int x = 0; x < Principal.NComputadoresConhecidos; x++) {
-                        if(Principal.pesos[x][y][0]==Long.MAX_VALUE){
+                        if(Principal.pesos[x][y][0]==Principal.MAX){
                             System.out.print("MAX ");
                         }else{
                             System.out.print(Principal.pesos[x][y][0]+" ");
@@ -74,7 +74,7 @@ public class PropagadorDados extends Thread {
                     if(x==y){
                         dados+="0"+","+System.currentTimeMillis();  //sempre envia peso 0 de um nodo para si mesmo    
                     }else{
-                        if(Principal.pesos[x][y][0]==Long.MAX_VALUE){
+                        if(Principal.pesos[x][y][0]==Principal.MAX){
                             dados+="MAX"+","+Principal.pesos[x][y][1];
                         }else{
                             dados+=Principal.pesos[x][y][0]+","+Principal.pesos[x][y][1];

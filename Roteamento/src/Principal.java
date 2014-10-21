@@ -21,6 +21,7 @@ public class Principal {
     public static Integer NComputadoresConhecidos=0;
     public static final Object LockMatrizEDados= new Object();
     public static long inicio;
+    public static long MAX = Integer.MAX_VALUE;
     
 
     public static void main(String[] args) {
@@ -68,7 +69,7 @@ public class Principal {
             }
             for (int y = 0; y <Ncomputadores; y++) {
                 for (int x = 0; x < Ncomputadores; x++) {
-                    pesos[x][y][0]=Long.MAX_VALUE;
+                    pesos[x][y][0]=Principal.MAX;
                     pesos[x][y][1]=0;
                 }
             }
