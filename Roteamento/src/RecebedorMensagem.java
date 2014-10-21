@@ -43,7 +43,7 @@ public class RecebedorMensagem extends Thread {
                                 String key = entry.getKey();
                                 int value = entry.getValue();
                                 if(value == anterior){
-                                    System.out.println("RECEBEDORMENSAGEM: encaminhou mensagem "+mensagem[2]+" de "+mensagem[0]+" para "+mensagem[0] + "atravez de "+key);
+                                    JOptionPane.showMessageDialog(null,"RECEBEDORMENSAGEM: encaminhou mensagem "+mensagem[2]+" de "+mensagem[0]+" para "+mensagem[0] + "atravez de "+key);
                                     repassa = new Socket(key,Principal.portaMensagens);
                                     break;
                                 }
