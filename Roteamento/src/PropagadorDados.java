@@ -58,6 +58,7 @@ public class PropagadorDados extends Thread {
                     int index = entrySet.getValue();
                     if(index==n){
                         dados+=IP+":";
+                        n++;
                         break;
                     }
                 }
