@@ -32,7 +32,7 @@ public class RecebedorMensagem extends Thread {
                     synchronized(Dijkstrador.anterior){
                         int anterior = Dijkstrador.anterior[Principal.mapaIPs.get(mensagem[0])];
                         Socket repassa = null;
-                        if(anterior==0){  //se esta em um dos vizinhos do computador que deve receber a mensagem
+                        if(anterior==-1){  //se esta em um dos vizinhos do computador que deve receber a mensagem
                             repassa = new Socket(mensagem[0],Principal.portaMensagens);
                             JOptionPane.showMessageDialog(null, "Você recebeu a mensagem \n"+ mensagem[2]+"\n de: "+mensagem[1]);
                         }else{ //se nao for um dos vizinhos
