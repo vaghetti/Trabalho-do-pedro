@@ -4,7 +4,7 @@ import java.io.IOException;
 //Thread que fica pedidndo o ping de cada um dos vizinhos
 public class Pingador extends Thread {
     String[] IPsVizinhos;
-    private final int tempoEspera=5;
+    private final int tempoEspera=500;
     public void run(){
         //System.out.println("PINGADOR: Pingador iniciado");
         try {
