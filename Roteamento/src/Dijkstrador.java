@@ -66,7 +66,7 @@ public class Dijkstrador extends Thread{
                     if (Principal.pesos[currentNode][j][0] < max && best[currentNode] +   Principal.pesos[currentNode][j][0] < best[j])
                     {
                         best[j] = best[currentNode] + Principal.pesos[currentNode][j][0];
-                        anterior[currentNode]  = j;
+                        anterior[j]  = currentNode;
                     }
                 }
             }
