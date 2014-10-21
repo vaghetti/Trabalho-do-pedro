@@ -45,7 +45,7 @@ public class Principal {
             PropagadorDados propagadorDados = new PropagadorDados(args);
             propagadorDados.start();
             Dijkstrador dijktrador = new Dijkstrador();
-            //dijktrador.start();
+            dijktrador.start();
         } catch (IOException e) {
             e.printStackTrace();
         }
