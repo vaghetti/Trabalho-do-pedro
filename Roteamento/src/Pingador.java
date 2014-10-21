@@ -6,10 +6,10 @@ public class Pingador extends Thread {
     String[] IPsVizinhos;
     private final int tempoEspera=5;
     public void run(){
-        System.out.println("PINGADOR: Pingador iniciado");
+        //System.out.println("PINGADOR: Pingador iniciado");
         try {
             while(true){
-                System.out.println("PINGADOR: Pingando todos vizinhos");
+                //System.out.println("PINGADOR: Pingando todos vizinhos");
                 for(int x=0;x<IPsVizinhos.length;x++){
                     new AtualizaPing(IPsVizinhos[x]).start();  //manda o ip do vizinho para ober o novo ping
                 }

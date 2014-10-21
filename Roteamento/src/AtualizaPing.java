@@ -19,7 +19,7 @@ public class AtualizaPing extends Thread {
     @Override
     public void run(){
         try {
-            System.out.println("PINGADOR: Pingando "+IPvizinho);
+            //System.out.println("PINGADOR: Pingando "+IPvizinho);
             out.println("HELLO");
             tempo=System.currentTimeMillis();
             input.readLine(); //recebe o hello de volta
