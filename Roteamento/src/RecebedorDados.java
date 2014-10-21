@@ -63,7 +63,7 @@ public class RecebedorDados extends Thread {
                     if(Principal.pesos[Principal.mapaIPs.get(vetorIPs[x])][Principal.mapaIPs.get(vetorIPs[y])][1] < tempo && peso!=Long.MAX_VALUE){
                        Principal.pesos[Principal.mapaIPs.get(vetorIPs[x])][Principal.mapaIPs.get(vetorIPs[y])][1] = tempo;
                        Principal.pesos[Principal.mapaIPs.get(vetorIPs[x])][Principal.mapaIPs.get(vetorIPs[y])][0] = peso;
-                      //     System.out.println("RECEBEDORDADOS: atualizou o peso de "+vetorIPs[x]+" ate "+vetorIPs[y]+" para "+peso);
+                       System.out.println("RECEBEDORDADOS: atualizou o peso de "+vetorIPs[x]+" ate "+vetorIPs[y]+" para "+peso);
                     }
                 }
             }
