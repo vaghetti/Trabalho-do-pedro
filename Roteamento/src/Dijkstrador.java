@@ -19,6 +19,11 @@ public class Dijkstrador extends Thread{
         try {
             while(true){
                 Thread.sleep(intervalo*1000);
+                synchronized(Principal.LockMatrizEDados){
+                    if(Principal.NComputadoresConhecidos == Principal.Ncomputadores){
+                        continue;  //so faz o dijktra se tiver todas informaçoes
+                    }
+                }
                 System.out.println("DIJKSTRADOR: mapa de ips");
                 for(Map.Entry<String, Integer> entry : Principal.mapaIPs.entrySet()) {
                     String key = entry.getKey();
