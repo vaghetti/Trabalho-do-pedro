@@ -56,7 +56,7 @@ public class RecebedorDados extends Thread {
                     peso = Long.parseLong(par[0]);
                     tempo = Long.parseLong(par[1]);
                     System.out.println("RECEBEDORDADOS: parser leu tempo :"+tempo+" e peso "+ peso+" de "+vetorIPs[x]+ " ate "+vetorIPs[y]);
-                    if(Principal.pesos[Principal.mapaIPs.get(vetorIPs[x])][Principal.mapaIPs.get(vetorIPs[y])][1] > tempo){
+                    if(Principal.pesos[Principal.mapaIPs.get(vetorIPs[x])][Principal.mapaIPs.get(vetorIPs[y])][1] > tempo && tempo!=Long.MAX_VALUE){
                        Principal.pesos[Principal.mapaIPs.get(vetorIPs[x])][Principal.mapaIPs.get(vetorIPs[y])][1] = tempo;
                        Principal.pesos[Principal.mapaIPs.get(vetorIPs[x])][Principal.mapaIPs.get(vetorIPs[y])][0] = peso;
                         System.out.println("RECEBEDORDADOS: atualizou o peso de "+vetorIPs[x]+" ate "+vetorIPs[y]+" para "+peso);
