@@ -25,11 +25,11 @@ public class AtualizaPing extends Thread {
             input.readLine(); //recebe o hello de volta
             tempo=System.currentTimeMillis()-tempo;
             synchronized(Principal.LockMatrizEDados){
-                System.out.println("PINGADOOR: calculou pos = "+Principal.mapaIPs.get(IPvizinho)+" para o ip "+IPvizinho);
+               // System.out.println("PINGADOOR: calculou pos = "+Principal.mapaIPs.get(IPvizinho)+" para o ip "+IPvizinho);
                 Principal.pesos[0][Principal.mapaIPs.get(IPvizinho)][0]=tempo;
                 Principal.pesos[0][Principal.mapaIPs.get(IPvizinho)][1]=System.currentTimeMillis();
             }
-            System.out.println("PINGADOR: Calculou ping para "+IPvizinho+" como sendo "+tempo);
+            //System.out.println("PINGADOR: Calculou ping para "+IPvizinho+" como sendo "+tempo);
             vizinho.close();
         } catch ( NumberFormatException | IOException e) {
             System.out.println("PINGADOR: Erro no pedido de ping");

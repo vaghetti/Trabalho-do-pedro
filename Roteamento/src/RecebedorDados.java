@@ -36,11 +36,11 @@ public class RecebedorDados extends Thread {
             String[] aux = dados.split("@");  
             int numeroDeIps = Integer.parseInt(aux[0]);
             
-            System.out.println("RECEBEDORDADOS: parser recebe string de dados :"+dados);
+           // System.out.println("RECEBEDORDADOS: parser recebe string de dados :"+dados);
             aux = aux[1].split("/");
             String vetorIPs[] = aux[0].split(":"); 
             for (String ip : vetorIPs) {
-                System.out.println("RECEBEDORDADOS: parser leu ip :"+ip);
+                //System.out.println("RECEBEDORDADOS: parser leu ip :"+ip);
                 if(!Principal.mapaIPs.containsKey(ip)){
                     Principal.mapaIPs.put(ip, Principal.NComputadoresConhecidos);
                     Principal.NComputadoresConhecidos++;
@@ -55,11 +55,11 @@ public class RecebedorDados extends Thread {
                     par = pares[x].split(",");
                     peso = Long.parseLong(par[0]);
                     tempo = Long.parseLong(par[1]);
-                    System.out.println("RECEBEDORDADOS: parser leu tempo :"+tempo+" e peso "+ peso+" de "+vetorIPs[x]+ " ate "+vetorIPs[y]);
+                    //System.out.println("RECEBEDORDADOS: parser leu tempo :"+tempo+" e peso "+ peso+" de "+vetorIPs[x]+ " ate "+vetorIPs[y]);
                     if(Principal.pesos[Principal.mapaIPs.get(vetorIPs[x])][Principal.mapaIPs.get(vetorIPs[y])][1] > tempo && tempo!=Long.MAX_VALUE){
                        Principal.pesos[Principal.mapaIPs.get(vetorIPs[x])][Principal.mapaIPs.get(vetorIPs[y])][1] = tempo;
                        Principal.pesos[Principal.mapaIPs.get(vetorIPs[x])][Principal.mapaIPs.get(vetorIPs[y])][0] = peso;
-                        System.out.println("RECEBEDORDADOS: atualizou o peso de "+vetorIPs[x]+" ate "+vetorIPs[y]+" para "+peso);
+                       System.out.println("RECEBEDORDADOS: atualizou o peso de "+vetorIPs[x]+" ate "+vetorIPs[y]+" para "+peso);
                     }
                 }
             }
