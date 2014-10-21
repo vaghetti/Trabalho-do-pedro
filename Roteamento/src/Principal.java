@@ -32,6 +32,8 @@ public class Principal {
             System.out.println("Começou o programa!");
             RespondedorPing respondedorPing= new RespondedorPing();
             respondedorPing.start();
+            RecebedorDados recebedorDados = new RecebedorDados();
+            recebedorDados.start();
             Pingador pingador = new Pingador(args);  //os ips dos vizinhos sao recebidos como argumentos
             //TODO: mostrar o ip na caixinha de dialogo
             if(JOptionPane.showConfirmDialog(null, "iniciar operação?"+say()) == JOptionPane.CANCEL_OPTION){
