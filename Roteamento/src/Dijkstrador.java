@@ -1,3 +1,6 @@
+
+import java.util.Map;
+
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -16,12 +19,18 @@ public class Dijkstrador extends Thread{
         try {
             while(true){
                 Thread.sleep(intervalo*1000);
+                System.out.println("DIJKSTRADOR: mapa de ips");
+                for(Map.Entry<String, Integer> entry : Principal.mapaIPs.entrySet()) {
+                    String key = entry.getKey();
+                    int value = entry.getValue();
+                    System.out.println("DIJKSTRADOR: "+key+" val = "+value);
+                }
                 System.out.println("DIJKSTRADOR: calculo dijstra, lista de caminhos");
                 dijkstra();
                 for(int x=0;x<anterior.length;x++){
                     System.out.print(x+":"+anterior[x]+" ");
                 }
-                System.out.println("DIJKSTRADOR: lista de pesos calculados");
+                System.out.println("\nDIJKSTRADOR: lista de pesos calculados");
                 for(int x=0;x<anterior.length;x++){
                     System.out.print(x+":"+best[x]+" ");
                 }
