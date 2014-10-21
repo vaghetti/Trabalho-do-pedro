@@ -50,11 +50,17 @@ public class PropagadorDados extends Thread {
         String dados= new String("");
         synchronized(Principal.LockMatrizEDados){
             dados+=Principal.NComputadoresConhecidos+"@"; //declara os ips associados as posicoes
-
-            for (Map.Entry<String, Integer> entrySet : Principal.mapaIPs.entrySet()) {
-                String IP = entrySet.getKey();
-                int index = entrySet.getValue();
-                dados+=IP+":";
+               
+            int n=0;
+            while(n<Principal.NComputadoresConhecidos){
+                for (Map.Entry<String, Integer> entrySet : Principal.mapaIPs.entrySet()) {
+                    String IP = entrySet.getKey();
+                    int index = entrySet.getValue();
+                    if(index==n){
+                        dados+=IP+":";
+                        break;
+                    }
+                }
             }
             dados+="/";
 
