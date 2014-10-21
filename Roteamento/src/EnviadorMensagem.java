@@ -12,7 +12,6 @@ public class EnviadorMensagem extends Thread {
     public void run(){
         try {
             while(true){
-                while(!Principal.fezPrimeiroDijkstra);
                 String entrada = JOptionPane.showInputDialog("Informe a sua mensagem no formato IP:MENSAGEM");
                 int anterior = Principal.mapaIPs.get(entrada.split(":")[0]);
                 synchronized(Dijkstrador.anterior){

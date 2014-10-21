@@ -22,10 +22,7 @@ public class Dijkstrador extends Thread{
                 synchronized(Principal.LockMatrizEDados){
                     if(Principal.NComputadoresConhecidos < Principal.Ncomputadores){
                         System.out.println("DIJKSTRADOR: dijkstrador nao fez nada, tabela ainda nao esta completa nComputadoresConhecidos ="+Principal.NComputadoresConhecidos+" N computadores = "+Principal.Ncomputadores);
-                        Principal.fezPrimeiroDijkstra= false;
                         continue;  //so faz o dijktra se tiver todas informaçoes
-                    }else{
-                        Principal.fezPrimeiroDijkstra=true;
                     }
                 }
                 System.out.println("DIJKSTRADOR: mapa de ips");

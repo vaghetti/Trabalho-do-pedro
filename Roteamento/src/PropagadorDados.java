@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 */
 public class PropagadorDados extends Thread {
     private String[] IPsVizinhos;
-    private static final int espera = 6;
+    private static final int espera = 3;
     private PrintWriter out;
     private Socket conexao;
     public void run(){

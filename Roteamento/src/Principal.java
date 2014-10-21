@@ -22,7 +22,6 @@ public class Principal {
     public static final Object LockMatrizEDados= new Object();
     public static long inicio;
     public static long MAX = Integer.MAX_VALUE;
-    public static boolean fezPrimeiroDijkstra=false;
 
     public static void main(String[] args) {
         inicio = System.currentTimeMillis();
@@ -48,7 +47,7 @@ public class Principal {
             propagadorDados.start();
             Dijkstrador dijktrador = new Dijkstrador();
             dijktrador.start();
-            Thread.sleep(10*1000);
+            Thread.sleep(20*1000);
             EnviadorMensagem enviadorMensagem = new EnviadorMensagem();
             enviadorMensagem.start();
             
