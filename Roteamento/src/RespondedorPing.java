@@ -10,7 +10,7 @@ public class RespondedorPing extends Thread{
         while(true){
             try {
                 Socket conexao = servidor.accept();
-                System.out.println("RESPONDEDOR DE PING: recebeu pedido de HELLO de "+conexao.getLocalAddress());
+                //System.out.println("RESPONDEDOR DE PING: recebeu pedido de HELLO de "+conexao.getLocalAddress());
                 
                 new RespondePing(conexao).start();  //dispara Thread para esperar um tempo aleatorio, responder o pedido e fechar a conexao
             } catch (IOException e) {

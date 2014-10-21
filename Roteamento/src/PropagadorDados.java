@@ -18,8 +18,8 @@ public class PropagadorDados extends Thread {
         try{
             while(true){
                 String dados = geraStringDados();
-                System.out.println("PROPAGADOR DADOS: Gerou string de dados para compartilhar : ");
-                System.out.println("PROPAGADOR DADOS: "+dados);
+                //System.out.println("PROPAGADOR DADOS: Gerou string de dados para compartilhar : ");
+                //System.out.println("PROPAGADOR DADOS: "+dados);
                 for(int x=0;x<IPsVizinhos.length;x++){
                     conexao = new Socket(IPsVizinhos[x],Principal.portaDados);
                     out =new PrintWriter(conexao.getOutputStream(), true);
