@@ -27,7 +27,7 @@ public class AtualizaPing extends Thread {
             synchronized(Principal.LockMatrizEDados){
                // System.out.println("PINGADOOR: calculou pos = "+Principal.mapaIPs.get(IPvizinho)+" para o ip "+IPvizinho);
                 Principal.pesos[0][Principal.mapaIPs.get(IPvizinho)][0]=tempo;
-                Principal.pesos[0][Principal.mapaIPs.get(IPvizinho)][1]=System.currentTimeMillis();
+                Principal.pesos[0][Principal.mapaIPs.get(IPvizinho)][1]=System.currentTimeMillis()-Principal.inicio;
             }
             //System.out.println("PINGADOR: Calculou ping para "+IPvizinho+" como sendo "+tempo);
             vizinho.close();

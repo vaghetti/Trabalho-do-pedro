@@ -20,9 +20,11 @@ public class Principal {
     public static Map<String,Integer> mapaIPs;
     public static Integer NComputadoresConhecidos=0;
     public static final Object LockMatrizEDados= new Object();
+    public static long inicio;
     
 
     public static void main(String[] args) {
+        inicio = System.currentTimeMillis();
         pesos = new long[Ncomputadores][Ncomputadores][2];
         //primeira coluna = peso
         //segunda = hora em que este peso foi lido
@@ -65,7 +67,7 @@ public class Principal {
             for (int y = 0; y <Ncomputadores; y++) {
                 for (int x = 0; x < Ncomputadores; x++) {
                     pesos[x][y][0]=Long.MAX_VALUE;
-                    pesos[x][y][1]=System.currentTimeMillis();
+                    pesos[x][y][1]=0;
                 }
             }
         }

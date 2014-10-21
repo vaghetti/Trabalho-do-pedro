@@ -36,7 +36,7 @@ public class RecebedorDados extends Thread {
             String[] aux = dados.split("@");  
             int numeroDeIps = Integer.parseInt(aux[0]);
             
-           // System.out.println("RECEBEDORDADOS: parser recebe string de dados :"+dados);
+             System.out.println("RECEBEDORDADOS: parser recebe string de dados :"+dados);
             aux = aux[1].split("/");
             String vetorIPs[] = aux[0].split(":"); 
             for (String ip : vetorIPs) {
