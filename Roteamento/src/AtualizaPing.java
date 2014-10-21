@@ -48,7 +48,7 @@ public class AtualizaPing extends Thread {
                     int value = entrySet.getValue();
                     System.out.println("PINGADOR: "+key+" val = "+value);
                 }
-                System.out.println("PINGADOOR: calculou pos = "+Principal.mapaIPs.get(IPvizinho));
+                System.out.println("PINGADOOR: calculou pos = "+Principal.mapaIPs.get(IPvizinho)+" para o ip "+IPvizinho);
                 Principal.pesos[0][Principal.mapaIPs.get(IPvizinho)][0]=tempo;
                 Principal.pesos[0][Principal.mapaIPs.get(IPvizinho)][1]=System.currentTimeMillis();
             }
