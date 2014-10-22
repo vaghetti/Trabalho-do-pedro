@@ -14,26 +14,39 @@ public class Enviador {
     	Socket socket = new Socket(IP,9090);
     	int atual = 0;
     	int tamJanela=8;
+    	// Cria e abre o socket do recebedor
     	RecebeConfirm recebedor = new RecebeConfirm(socket);
     	recebedor.start();
+    	
+    	//da um mutex no recebedor
     	synchronized(recebedor){};
+    	
+    	//Cria um vectro de enviadores
     	Vector<EnviaDado> enviadores = new Vector<EnviaDado>();
+    	
+    	//enquando não confirmou o ultimo quadro
     	while(recebedor.confirmados[QUADROS-1]!=1){
+    		//envia a janela
 	    	for(int x=atual;x<QUADROS && x<atual+tamJanela;x++){
 	    		enviadores.add(new EnviaDado(socket,x));  //cria a thread de envio
 	    		System.out.println("enviou o quadro "+x);
+	    		//da um mutax no vetor de confirmados
 	    		synchronized(recebedor.confirmados){
 	    			recebedor.confirmados[x]=0;
 	    		}
 	    		enviadores.get(enviadores.size()-1).start(); //inicia a thread
 	    	}
+	    	//espera todas as threads terminarem
 	    	for(int x=0;x<enviadores.size();x++){
-	    		while(enviadores.get(x).getState()!=Thread.State.TERMINATED){ //espera que todos enviadores terminem
-	    		}
+	    		while(enviadores.get(x).getState()!=Thread.State.TERMINATED);
 	    	}
+	    	// limpa o vector de threads
 	    	enviadores.clear();
 	    	Thread.sleep(100);
+	    	//desliza a janela
 	    	int fim = atual+tamJanela;
+	    	
+	    	//verifica os quadros confrmados
 	    	for(int x=atual;x<QUADROS && x<fim;x++){
 	    		synchronized(recebedor.confirmados){
 	    			if(recebedor.confirmados[x]==1){

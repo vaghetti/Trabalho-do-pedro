@@ -17,6 +17,7 @@ public class EnviaDado extends Thread {
 		if(rand.nextInt(100)>CHANCE){
 			try {
 				try{
+					//envia o quadro a nao ser que tenha recebido o sinal de final -1
 					PrintWriter out =new PrintWriter(socket.getOutputStream(), true);	
 					if(quadro != -1){
 						
@@ -42,7 +43,7 @@ public class EnviaDado extends Thread {
 			e.printStackTrace();
 		}
     }
-	
+	// construtor do enviador que recebe o socket e o quadro o enviador
 	public EnviaDado(Socket socket, int quadro){
 		this.quadro = quadro;
 		this.socket= socket;

@@ -13,7 +13,8 @@ public class RecebeConfirm extends Thread {
      public int[] confirmados;
      
 	public void run(){
-		try{		   
+		try{
+			//recebe a confirmacao e atualiza o vetor de confirmados
 	        BufferedReader input =new BufferedReader(new InputStreamReader(socket.getInputStream()));
 	        //PrintWriter out =new PrintWriter(socket.getOutputStream(), true);
 	        while (true) {

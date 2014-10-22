@@ -13,7 +13,7 @@ public class Recebedor {
 	private static int CHANCE = 10;
 
 	public static void main(String[] args) throws IOException, InterruptedException {
-        ServerSocket servidor = new ServerSocket( 9090); //abre a porta
+        ServerSocket servidor = new ServerSocket(9090); //abre a porta
        
         Random rand = new Random();
         Socket socket = servidor.accept(); //aceita conexao do servidor

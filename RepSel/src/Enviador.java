@@ -15,15 +15,17 @@ public class Enviador {
     	for(int x=0;x<args.length;x++){
     		System.out.println(args[x]);
     	}
+		// cria a conexao
     	String IP = JOptionPane.showInputDialog("Digite o ip que deseja se conectar");
     	Socket socket = new Socket(IP,9090);
     	int atual = 0;
     	int tamJanela=8;
+		//inicia o recebedor
     	RecebeConfirm recebedor = new RecebeConfirm(socket);
     	recebedor.start();
     	synchronized(recebedor){};
     	Vector<EnviaDado> enviadores = new Vector<EnviaDado>();
-    	
+    	// enquando tem quadros para enviar
     	while(numeroDeConfirmados!=QUADROS){
 	    	for(int x=atual;x<QUADROS && x<atual+tamJanela;x++){
 	    		synchronized(recebedor.confirmados){
