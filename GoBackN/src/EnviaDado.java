@@ -14,7 +14,7 @@ public class EnviaDado extends Thread {
 
 	public void run(){
 		Random rand = new Random();
-		if(rand.nextInt(100)>CHANCE){
+		if(rand.nextInt(100)>CHANCE || quadro == -1){
 			try {
 				try{
 					//envia o quadro a nao ser que tenha recebido o sinal de final -1
