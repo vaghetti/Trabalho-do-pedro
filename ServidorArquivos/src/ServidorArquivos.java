@@ -16,6 +16,7 @@ public class ServidorArquivos {
     public static void main(String[] args) {
         try {
             ServerSocket servidorSockets = new ServerSocket(PORTA);
+            arquivos=new Vector<File>();
             while(true){
                 Socket socket = servidorSockets.accept();
                 new HandleClient(socket).start();
