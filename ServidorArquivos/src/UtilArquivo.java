@@ -55,7 +55,8 @@ public class UtilArquivo {
             byte[] buffer = new byte[tamanho];    
             int lidos = -1;    
             while ((lidos = in.read(buffer, 0, tamanho)) != -1) {    
-                System.out.println(lidos);  
+                System.out.println(lidos);
+                System.out.println(buffer);
                 out.write(buffer, 0, lidos);    
             }    
             out.flush();

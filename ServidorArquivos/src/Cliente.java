@@ -17,17 +17,21 @@ public class Cliente {
     public static void main(String[] args) {
         try {
             Scanner scanner = new Scanner(System.in);
-            Socket conexao=new Socket("localhost",50000);
-            BufferedReader input =new BufferedReader(new InputStreamReader(conexao.getInputStream()));
-            PrintWriter out =new PrintWriter(conexao.getOutputStream(), true);
+            
             
             while(true){
+                Socket conexao=new Socket("localhost",50000);
+                BufferedReader input =new BufferedReader(new InputStreamReader(conexao.getInputStream()));
+                PrintWriter out =new PrintWriter(conexao.getOutputStream(), true);
+                
+                
                 System.out.println("digite upload ou download");
                 String acao = scanner.nextLine();
                 if(acao.equals("download")){
                     System.out.println("Digite o nome do arquivo que quer receber");
                     String nome = scanner.nextLine();
-                    out.println("download:"+nome);
+                    out.println("download");
+                    out.println(nome);
                     File arquivo = UtilArquivo.recebeArquivo(conexao);
                 }else{
                     if(acao.equals("upload")){
