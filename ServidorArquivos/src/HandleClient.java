@@ -26,15 +26,16 @@ public class HandleClient extends Thread{
     public void run(){
         while(true){
             try {
-                String mensagem = input.readLine();
-                String comando = mensagem.split(":")[0];
+                String comando= input.readLine();
+                System.out.println("HANDLECLIENT: recebeu comando "+comando);
                 if(comando.equals("download")){
-                    String nome = mensagem.split(":")[1];
+                    String nome = input.readLine();
                     synchronized(ServidorArquivos.arquivos){
                         boolean falha=true;
                         for(int x=0;x<ServidorArquivos.arquivos.size();x++){
                             if(ServidorArquivos.arquivos.get(x).getName().equals(nome)){
                                 UtilArquivo.enviaArquivo(conexao.getOutputStream(), ServidorArquivos.arquivos.get(x));
+                                System.out.println("HANDLECLIENT: enviou o arquivo "+nome);
                                 falha=false;
                                 break;
                             }
@@ -45,7 +46,7 @@ public class HandleClient extends Thread{
                     }
                 }else{
                     if(comando.equals("upload")){
-                        File arquivo = UtilArquivo.recebeArquivo(conexao,mensagem.split(":")[1],mensagem.split(":")[2]);
+                        File arquivo = UtilArquivo.recebeArquivo(conexao);
                         synchronized(ServidorArquivos.arquivos){
                             ServidorArquivos.arquivos.add(arquivo);
                         }

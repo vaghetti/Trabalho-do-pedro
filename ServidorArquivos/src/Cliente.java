@@ -28,11 +28,13 @@ public class Cliente {
                     System.out.println("Digite o nome do arquivo que quer receber");
                     String nome = scanner.nextLine();
                     out.println("download:"+nome);
+                    File arquivo = UtilArquivo.recebeArquivo(conexao);
                 }else{
                     if(acao.equals("upload")){
                         System.out.println("Escolha o arquivo");
                         JFileChooser escolhedor = new JFileChooser();
                         if(escolhedor.showOpenDialog(null)==JFileChooser.APPROVE_OPTION){
+                            out.println("upload");
                             UtilArquivo.enviaArquivo(conexao.getOutputStream(), escolhedor.getSelectedFile());
                         }else{
                             System.out.println("erro na escolha do arquivo");

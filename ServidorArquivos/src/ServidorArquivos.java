@@ -19,6 +19,7 @@ public class ServidorArquivos {
             while(true){
                 Socket socket = servidorSockets.accept();
                 new HandleClient(socket).start();
+                System.out.println("novo cliente conectado");
             }
         } catch (IOException ex) {
             Logger.getLogger(ServidorArquivos.class.getName()).log(Level.SEVERE, null, ex);
