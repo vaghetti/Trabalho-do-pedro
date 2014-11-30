@@ -15,6 +15,7 @@ public class RecebeConfirm extends Thread {
      
 	public void run(){
 		try{		   
+			//fica recebendo as confirmaoes e atualizano a tabela
 	        BufferedReader input =new BufferedReader(new InputStreamReader(socket.getInputStream()));
 	        //PrintWriter out =new PrintWriter(socket.getOutputStream(), true);
 	        while (true) {
@@ -40,6 +41,7 @@ public class RecebeConfirm extends Thread {
 		}
     }
 	
+	//construtor que inicializa o veor de confirmados e recebe o socket de conexao
 	public RecebeConfirm(Socket socket){
 		this.socket= socket;
 		confirmados = new int[Enviador.QUADROS];

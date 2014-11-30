@@ -18,7 +18,6 @@ public class Recebedor {
         Random rand = new Random();
         Socket socket = servidor.accept(); //aceita conexao do servidor
         
-        
         while (true) {
         	BufferedReader input =new BufferedReader(new InputStreamReader(socket.getInputStream()));
             PrintWriter out =new PrintWriter(socket.getOutputStream(), true);

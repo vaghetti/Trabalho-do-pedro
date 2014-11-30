@@ -14,7 +14,8 @@ public class EnviaDado extends Thread {
 
 	public void run(){
 		Random rand = new Random();
-		if(rand.nextInt(100)>CHANCE){
+		// envia o dado se o dado nao for o sinal de fim -1
+		if(rand.nextInt(100)>CHANCE || quadro == -1){
 			try {
 				try{
 					PrintWriter out =new PrintWriter(socket.getOutputStream(), true);	
