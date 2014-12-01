@@ -84,6 +84,7 @@ int recebeMensagem(){  //retornos: 0: pode jogar 1: espera outra mensagem
 					if(mortos==18){
 						cout<<"Todas suas unidades estao mortas. Voce perdeu."<<endl;
 						enviaMensagem(0,0,5);
+						TERMINOU=true;
 						return 0;
 					}else{
 						enviaMensagem(0,0,2);
