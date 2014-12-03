@@ -2,19 +2,23 @@
 #include <iostream>
 #include <cstdio>
 #include <fstream>
+#include <sstream>
 
 using namespace std;
 
-const int PORT = 50001;
+const int PORT = 50007;
 
 struct Mensagem{
 	int codigo,x,y;
 };
 
+int xUltimoTiro,yUltimoTiro;
 char matrizLocal[10][10],matrizAdv[10][10];
 int fdSocket; 
 bool TERMINOU;
 int mortos=0;
+string saida;
+
 void mostraMatrizes(){
 	system("clear");
 	cout<<"    voce                || adversario"<<endl<<"    ";
@@ -28,12 +32,18 @@ void mostraMatrizes(){
 	for(int y=0;y<10;y++){
 		printf("%2d| ",y+1);
 		for(int x=0;x<10;x++){
-			cout<<matrizLocal[x][y]<<" ";
+			if(matrizLocal[x][y]!='0')
+				cout<<matrizLocal[x][y]<<" ";
+			else
+				cout<<"  ";
 		}
 		cout<<"||";
 		printf("%2d| ",y+1);
 		for(int x=0;x<10;x++){
-			cout<<matrizAdv[x][y]<<" ";
+			if(matrizAdv[x][y]!='0')
+				cout<<matrizAdv[x][y]<<" ";
+			else
+				cout<<"  ";
 		}
 		cout<<endl;
 	}
@@ -46,6 +56,7 @@ void enviaMensagem(int x,int y,int codigo){
 	msg->codigo=codigo;
 	char* charMsg = (char*)malloc(sizeof(Mensagem));
 	charMsg=(char*)msg;
+	cout<<"enviando mensagem cod "<<msg->codigo<<" x = "<<msg->x<<" y = "<<msg->y<<endl;
 	sendMessage(fdSocket,charMsg,sizeof(Mensagem));
 }
 
@@ -53,12 +64,13 @@ void joga(){
 	int x,y;
 	cout<<"Digite as coordenadas onde deseja atirar. Digite -1 -1 para desistir."<<endl;
 	cin>>x>>y;
+	xUltimoTiro = x-1;
+	yUltimoTiro = y-1;
 	if(x==-1 && y==-1){
 		enviaMensagem(x,y,6);
 		cout<<"Voce desistiu do jogo. Voce perdeu."<<endl;
 		TERMINOU=true;
 	}else{
-		matrizAdv[x-1][y-1]='X';
 		enviaMensagem(x,y,1);
 	}
 }
@@ -67,22 +79,29 @@ int recebeMensagem(){  //retornos: 0: pode jogar 1: espera outra mensagem
 	char charMsg[20];
 	receiveMessage(fdSocket,charMsg,sizeof(Mensagem));
 	Mensagem * msg = (Mensagem*)charMsg;
-	cout<<"Recebeu mensagem x = "<<msg->x<<" y = "<<msg->y<<" codigo = "<<msg->codigo<<endl;
+	saida.clear();
+	saida = "Recebeu mensagem x = ";
+    saida+='0'+msg->x;
+    saida+=" y = ";
+    saida+='0'+msg->y;
+	saida+=" codigo = ";
+    saida+='0'+msg->codigo;
+    saida+="\n";
 	msg->x--;
 	msg->y--;
 
 	if(msg->codigo==1){
 		if(msg->x>=0 && msg->x<10 && msg->y>=0 && msg->y<10){
 			if(matrizLocal[msg->x][msg->y]=='0'){
-				cout<<"Inimigo atirou na agua"<<endl;
+				saida+="Inimigo atirou na agua\n";
 				enviaMensagem(0,0,3);
 				return 0;
 			}else{
 				if(matrizLocal[msg->x][msg->y]=='1'){
-					cout<<"Inimigo acertou um navio"<<endl;
+					saida+="Inimigo acertou um navio\n";
 					mortos++;
 					if(mortos==18){
-						cout<<"Todas suas unidades estao mortas. Voce perdeu."<<endl;
+						saida+="Todas suas unidades estao mortas. Voce perdeu.\n";
 						enviaMensagem(0,0,5);
 						TERMINOU=true;
 						return 0;
@@ -92,36 +111,38 @@ int recebeMensagem(){  //retornos: 0: pode jogar 1: espera outra mensagem
 						return 1;
 					}
 				}else{
-					cout<<"Inimigo acertou um navio que já tinha sido atingido"<<endl;
+					saida+="Acertou um navio que já tinha sido atingido\n";
 					enviaMensagem(0,0,2);
 					return 1;
 				}
 			}
 		}else{
-			cout<<"Inimigo enviou coordenadas invalidas"<<endl;
+			saida+="Inimigo enviou coordenadas invalidas\n";
 			enviaMensagem(0,0,4);
 			return 1;
 		}
 	}else{
 		if(msg->codigo==2){
-			cout<<"Seu tiro acertou. Jogue de novo"<<endl;
+			saida+="Tiro acertou. Jogue de novo\n";
+			matrizAdv[xUltimoTiro][yUltimoTiro]='V';
 			return 0;
 		}
 		if(msg->codigo==3){
-			cout<<"Seu tiro acertou a agua. Aguarde a jogada do inimigo."<<endl;
+			saida+="Seu tiro acertou a agua. Aguarde a jogada do inimigo.\n";
+			matrizAdv[xUltimoTiro][yUltimoTiro]='X';
 			return 1;
 		}
 		if(msg->codigo==4){
-			cout<<"voce especificou uma coordenada invalida. Jogue novamente"<<endl;
+			saida+="Voce especificou uma coordenada invalida. Jogue novamente\n";
 			return 0;
 		}
 		if(msg->codigo==5){
-			cout<<"Voce venceu. Todos barcos do adversario foram destruidos."<<endl;
+			saida+="Voce venceu. Todos barcos do adversario foram destruidos.\n";
 			TERMINOU=true;
 			return 0;
 		}
 		if(msg->codigo==6){
-			cout<<"Voce venceu. O adversario se rendeu"<<endl;
+			saida+="Voce venceu. O adversario se rendeu\n";
 			TERMINOU=true;
 			return 0;
 		}
@@ -129,9 +150,10 @@ int recebeMensagem(){  //retornos: 0: pode jogar 1: espera outra mensagem
 	}
 
 }
+
 int main(int argc,char** argv){
 	TERMINOU=false;
-	fstream fs ("entrada.in", fstream::in | fstream::out);
+	fstream fs ("entrada2.in", fstream::in | fstream::out);
 	for(int y=0;y<10;y++){
 		for(int x=0;x<10;x++){
 			fs>>matrizLocal[x][y];
@@ -154,18 +176,21 @@ int main(int argc,char** argv){
 		fdSocket=acceptConnection(mainSocket, sockLen);
 		joga();
 	}else{
-		fdSocket=tryConnection((char*)"localhost", PORT, 0);
+		fdSocket=tryConnection((char*)"192.168.1.43", PORT, 0);
 	}
 
 	int retorno;
 	while(!TERMINOU){
 		retorno=1;
 		while(retorno==1){
-			mostraMatrizes();
 			retorno=recebeMensagem();
+			mostraMatrizes();
+			cout<<saida;
 		}
-		if(!TERMINOU)
+		if(!TERMINOU){
 			joga();
+			mostraMatrizes();
+		}
 	}
 
 	closeConnection(fdSocket);
