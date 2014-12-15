@@ -76,6 +76,7 @@ void iniciaConexao(int idPeerAlvo,char* ipPeerAlvo){
 	arrayChaves[idPeerAlvo] = chaveDescriptografada;
 	arrayConexoes[idPeerAlvo] = tryConnection(ipPeerAlvo,PORTACONECTAPEERS,0);
 	enviaMensagemConexao(arrayConexoes[idPeerAlvo],idPeer,msgResposta->b);
+	pthread_create(&arrayThreadsRecebeMensagem[idPeerAlvo],NULL,&threadRecebeMensagens,(void*)(long)idPeerAlvo);
 }
 
 int main(int argc,char** argv){

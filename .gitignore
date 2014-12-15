@@ -21,3 +21,6 @@
 *.app
 *.class
 /Roteamento/nbproject/private/
+/conexaoSegura/nbproject/private/
+/conexaoSegura/build/
+/conexaoSegura/dist/
