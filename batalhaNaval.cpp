@@ -6,7 +6,7 @@
 
 using namespace std;
 
-const int PORT = 50007;
+const int PORT = 50006;
 
 struct Mensagem{
 	int codigo,x,y;
@@ -19,6 +19,7 @@ bool TERMINOU;
 int mortos=0;
 string saida;
 
+// cria o print da tela 
 void mostraMatrizes(){
 	system("clear");
 	cout<<"    voce                || adversario"<<endl<<"    ";
@@ -80,6 +81,9 @@ int recebeMensagem(){  //retornos: 0: pode jogar 1: espera outra mensagem
 	receiveMessage(fdSocket,charMsg,sizeof(Mensagem));
 	Mensagem * msg = (Mensagem*)charMsg;
 	saida.clear();
+	
+	//cria a reposta depois do campo
+	
 	saida = "Recebeu mensagem x = ";
     saida+='0'+msg->x;
     saida+=" y = ";
@@ -90,6 +94,7 @@ int recebeMensagem(){  //retornos: 0: pode jogar 1: espera outra mensagem
 	msg->x--;
 	msg->y--;
 
+	// faz as verificacoes de resposta
 	if(msg->codigo==1){
 		if(msg->x>=0 && msg->x<10 && msg->y>=0 && msg->y<10){
 			if(matrizLocal[msg->x][msg->y]=='0'){
@@ -153,7 +158,7 @@ int recebeMensagem(){  //retornos: 0: pode jogar 1: espera outra mensagem
 
 int main(int argc,char** argv){
 	TERMINOU=false;
-	fstream fs ("entrada2.in", fstream::in | fstream::out);
+	fstream fs ("entrada.in", fstream::in | fstream::out);
 	for(int y=0;y<10;y++){
 		for(int x=0;x<10;x++){
 			fs>>matrizLocal[x][y];
@@ -170,16 +175,20 @@ int main(int argc,char** argv){
 
 	char message[20];
 
+	// verifica se eh cliente ou servidor
 	if(argc==2){
 		sockLen = sizeof(socketAddr);
 		mainSocket=openConnection(PORT,0);	//Abre conexão principal
 		fdSocket=acceptConnection(mainSocket, sockLen);
 		joga();
 	}else{
-		fdSocket=tryConnection((char*)"192.168.1.43", PORT, 0);
+		fdSocket=tryConnection((char*)"192.168.208.41", PORT, 0);
 	}
 
 	int retorno;
+	
+	// espera o fim do jogo pra terminar
+	
 	while(!TERMINOU){
 		retorno=1;
 		while(retorno==1){
@@ -192,6 +201,8 @@ int main(int argc,char** argv){
 			mostraMatrizes();
 		}
 	}
+
+	//fecha a conexao
 
 	closeConnection(fdSocket);
 

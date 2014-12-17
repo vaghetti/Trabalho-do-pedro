@@ -3,6 +3,7 @@
 #include "pedro.h"
 #include <stdlib.h>
 #include <time.h>
+#include <climits>
 
 const int PORT = 50001;
 
@@ -20,7 +21,7 @@ struct Mensagem{
 
 int main(){
 	int chaves[] = {123,312,1337,80085,3434,1234,32241,3413};
-	char charMsg[20];
+	char* charMsg = (char*)malloc(sizeof(char)*30);
 	struct sockaddr_in socketAddr;
 	socklen_t sockLen;
 	sockLen = sizeof(socketAddr);
@@ -38,6 +39,9 @@ int main(){
 		int chave = rand()%INT_MAX;
 		msgResposta->a=criptografa(chave,chaves[msgRecebida->a]);
 		msgResposta->b=criptografa(chave,chaves[msgRecebida->b]);
+		charMsg = (char*) msgResposta;
+		
+		sendMessage(fdSocket,charMsg,sizeof(Mensagem));
 
 		closeConnection(fdSocket);
 	}

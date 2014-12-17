@@ -67,6 +67,7 @@ void enviaMensagemConexao(int socket,int a,int b){
 }
 
 void iniciaConexao(int idPeerAlvo,char* ipPeerAlvo){
+	cout<<"idpeer "<<idPeer<<" idPeerAlvo "<<idPeerAlvo<<endl;
 	char * charMsg = (char*) malloc(sizeof(char)*20);
 	int socketDistribuidor=tryConnection(ipDistribuidorChaves, PORTADISTRIBUIDOR, 0);
 	enviaMensagemConexao(socketDistribuidor,idPeer,idPeerAlvo);
@@ -85,12 +86,13 @@ int main(int argc,char** argv){
 	int idPeerAlvo;
 	char* ip = (char*)malloc(sizeof(char)*30);
 	cout<<"Rodou programa com ID = "<<argv[1]<<endl;
-	idPeer= argv[0][0]-'0';
+	idPeer= argv[1][0]-'0';
 	while(true){
 		cout<<"Digite 'conecta X IP' para se conectar a um peer ou 'msg X texto' para enviar uma mensagem para X(se este ja estiver conectado)"<<endl;
 		cin>>comando>>idPeerAlvo;
 		if(comando.compare("conecta")==0){
 			cin>>ip;
+			cout<<"leu ip: "<<ip<<endl;
 			iniciaConexao(idPeerAlvo,ip);
 		}else{
 			if(comando.compare("msg")==0){
