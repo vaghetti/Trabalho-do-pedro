@@ -17,7 +17,8 @@ public class Cliente {
         Scanner scanner = new Scanner(System.in);
         while (true) {
             try {
-                Socket conexao = new Socket("192.168.208.24", 50000);
+                Socket conexao = new Socket("localhost", 50000);
+                //192.168.208.24
                 PrintWriter out = new PrintWriter(conexao.getOutputStream(), true);
                 BufferedReader input = new BufferedReader(new InputStreamReader(conexao.getInputStream()));
                 String comando = scanner.nextLine();
@@ -25,6 +26,7 @@ public class Cliente {
                     JFileChooser escolhedor = new JFileChooser();
                     if (escolhedor.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
                         out.println("upload");
+                        out.println(escolhedor.getSelectedFile().getName());
                         UtilArquivo.enviaArquivo(out, escolhedor.getSelectedFile());
                         System.out.println("arquivo " + escolhedor.getSelectedFile().getName() + " enviado ");
                     }

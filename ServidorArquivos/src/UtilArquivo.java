@@ -24,16 +24,15 @@ public class UtilArquivo {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 
     public static String recebeArquivo(BufferedReader input,boolean servidor) {
         try {
             String nome = input.readLine();
-            System.out.println("Nome do arquivo = "+nome);			
             if(servidor){
                 ServidorArquivos.nomesArquivos.add(nome);
             }
+            System.out.println("Nome do arquivo = "+nome);
             PrintWriter gravarArq = new PrintWriter(new FileWriter(nome),true);
 
             String buf = input.readLine(); 
