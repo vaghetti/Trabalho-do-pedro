@@ -17,7 +17,7 @@ public class Cliente {
         Scanner scanner = new Scanner(System.in);
         while (true) {
             try {
-                Socket conexao = new Socket("localhost", 50000);
+                Socket conexao = new Socket("192.168.208.24", 50000);
                 PrintWriter out = new PrintWriter(conexao.getOutputStream(), true);
                 BufferedReader input = new BufferedReader(new InputStreamReader(conexao.getInputStream()));
                 String comando = scanner.nextLine();
@@ -33,9 +33,9 @@ public class Cliente {
                     if (comando.equals("download")) {
                         System.out.println("Digite o nome do arquivo a ser baixado");
                         String nome = scanner.nextLine();
-                        out.println("downlaod");
+                        out.println("download");
                         out.println(nome);
-                        UtilArquivo.recebeArquivo(input);
+                        UtilArquivo.recebeArquivo(input,false);
                     } else {
                         System.out.println("comando " + comando + " desconhecido");
                     }

@@ -44,7 +44,7 @@ public class HandleClient extends Thread {
                 }
             } else {
                 if (mensagem.equals("upload")) {
-                    UtilArquivo.recebeArquivo(input);
+                    UtilArquivo.recebeArquivo(input,true);
                 } else {
                     System.out.println("Recebeu mensagem desconhecida " + mensagem);
                 }
