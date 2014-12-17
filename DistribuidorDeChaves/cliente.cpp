@@ -33,9 +33,10 @@ void criptografaTexto(char* mensagem,int chave){
 
 void * threadRecebeMensagens(void *idPeerAlvo){
 	long idAlvo = (long) idPeerAlvo;
+	
 	char* charMsg = (char*) malloc(sizeof(char)*256);
 	while(true){
-		receiveMessage(arrayConexoes[idAlvo],charMsg,sizeof(Mensagem));
+		receiveMessage(arrayConexoes[idAlvo],charMsg,sizeof(char)*256);
 		criptografaTexto(charMsg,arrayChaves[idAlvo]);
 		cout<<"Recebeu mensagem "<<charMsg<<" do peer "<<idAlvo<<endl;
 	}
@@ -53,15 +54,15 @@ void *threadAbreConexoes(void* p){
 		Mensagem* msgRecebida = (Mensagem*) charMsg;
 		arrayConexoes[msgRecebida->a]=fdSocket;
 		arrayChaves[msgRecebida->a] = criptografa(msgRecebida->b,chavesDistribuidor[idPeer]);
-		cout<<"Recebeu um pedido de abertura de conexao do peer "<<msgRecebida->a<<" usando a chave "<<msgRecebida->b<<endl;
-		pthread_create(&arrayThreadsRecebeMensagem[msgRecebida->a],NULL,&threadRecebeMensagens,(void*)(long)msgRecebida->a);
+		cout<<"Recebeu um pedido de abertura de conexao do peer "<<msgRecebida->a<<" usando a chave "<<arrayChaves[msgRecebida->a]<<endl;
+		pthread_create(&arrayThreadsRecebeMensagem[msgRecebida->a],NULL,&threadRecebeMensagens,(void*)(long)arrayChaves[msgRecebida->a]);
 	}
 }
 
 void enviaMensagemConexao(int socket,int a,int b){
 	Mensagem* msg = (Mensagem*)malloc(sizeof(Mensagem));
-	msg->a=0;
-	msg->b=1;
+	msg->a=a;
+	msg->b=b;
 	char * charMsg = (char*) malloc(sizeof(char)*20);
 	charMsg = (char*) msg;
 	sendMessage(socket,charMsg,sizeof(Mensagem));
@@ -100,6 +101,9 @@ int main(int argc,char** argv){
 		}else{
 			if(comando.compare("msg")==0){
 				cin>>texto;
+				criptografaTexto(texto,arrayChaves[idPeerAlvo]);
+				cout<<"texto criptografado "<<texto<<endl;
+				sendMessage(arrayConexoes[idPeerAlvo],texto,sizeof(char)*256);
 			}else{
 				cout<<"Comando nao reconhecido"<<endl;
 			}
