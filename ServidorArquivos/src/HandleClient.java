@@ -29,6 +29,7 @@ public class HandleClient extends Thread {
             String mensagem = input.readLine();
             if (mensagem.equals("download")) {
                 String nome = input.readLine();
+                System.out.println("procurando arquivo com o nome "+nome);
                 synchronized (ServidorArquivos.nomesArquivos) {
                     int x;
                     for (x = 0; x < ServidorArquivos.nomesArquivos.size(); x++) {
