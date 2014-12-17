@@ -60,9 +60,10 @@ void *threadAbreConexoes(void* p){
 
 void enviaMensagemConexao(int socket,int a,int b){
 	Mensagem* msg = (Mensagem*)malloc(sizeof(Mensagem));
-	msg->a=a;
-	msg->b=b;
+	msg->a=0;
+	msg->b=1;
 	char * charMsg = (char*) malloc(sizeof(char)*20);
+	charMsg = (char*) msg;
 	sendMessage(socket,charMsg,sizeof(Mensagem));
 }
 
@@ -87,6 +88,8 @@ int main(int argc,char** argv){
 	char* ip = (char*)malloc(sizeof(char)*30);
 	cout<<"Rodou programa com ID = "<<argv[1]<<endl;
 	idPeer= argv[1][0]-'0';
+	pthread_t threadConexoes;
+	pthread_create(&threadConexoes,NULL,&threadAbreConexoes,NULL);
 	while(true){
 		cout<<"Digite 'conecta X IP' para se conectar a um peer ou 'msg X texto' para enviar uma mensagem para X(se este ja estiver conectado)"<<endl;
 		cin>>comando>>idPeerAlvo;
