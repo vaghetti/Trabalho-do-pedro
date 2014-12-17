@@ -35,7 +35,7 @@ public class HandleClient extends Thread {
                     for (x = 0; x < ServidorArquivos.nomesArquivos.size(); x++) {
                         if (ServidorArquivos.nomesArquivos.get(x).equals(nome)) {
                             File arquivo = new File(nome);
-                            UtilArquivo.enviaArquivo(out, arquivo);
+                            UtilArquivo.enviaArquivoServidor(out, arquivo);
                             break;
                         }
                     }

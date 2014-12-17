@@ -26,6 +26,21 @@ public class UtilArquivo {
         }
     }
 
+	public static void enviaArquivoServidor(PrintWriter out, File arquivo) {
+        try {
+            Scanner arq = new Scanner(new FileReader(arquivo));
+
+            while (arq.hasNextLine()) {
+                out.println(arq.nextLine());
+            }
+            out.println("fim_do_arquivo");
+            
+            arq.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public static String recebeArquivo(BufferedReader input,boolean servidor) {
         try {
             String nome = input.readLine();

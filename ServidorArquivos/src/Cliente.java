@@ -17,7 +17,7 @@ public class Cliente {
         Scanner scanner = new Scanner(System.in);
         while (true) {
             try {
-                Socket conexao = new Socket("localhost", 50000);
+                Socket conexao = new Socket("192.168.1.55", 50000);
                 //192.168.208.24
                 PrintWriter out = new PrintWriter(conexao.getOutputStream(), true);
                 BufferedReader input = new BufferedReader(new InputStreamReader(conexao.getInputStream()));
