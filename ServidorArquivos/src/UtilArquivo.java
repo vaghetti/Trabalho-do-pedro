@@ -12,6 +12,7 @@ public class UtilArquivo {
 
     public static void enviaArquivo(PrintWriter out, File arquivo) {
         try {
+            out.println(arquivo.getName());
             Scanner arq = new Scanner(new FileReader(arquivo));
 
             while (arq.hasNextLine()) {

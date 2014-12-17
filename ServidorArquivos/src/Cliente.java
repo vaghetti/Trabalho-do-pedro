@@ -25,7 +25,6 @@ public class Cliente {
                     JFileChooser escolhedor = new JFileChooser();
                     if (escolhedor.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
                         out.println("upload");
-                        out.println(escolhedor.getSelectedFile().getName());
                         UtilArquivo.enviaArquivo(out, escolhedor.getSelectedFile());
                         System.out.println("arquivo " + escolhedor.getSelectedFile().getName() + " enviado ");
                     }
