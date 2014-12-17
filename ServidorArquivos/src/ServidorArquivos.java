@@ -11,12 +11,12 @@ import java.util.logging.Logger;
 public class ServidorArquivos {
 
     public static int PORTA=50000;
-    public static Vector<File> arquivos;
+    public static Vector<String> nomesArquivos;
     
     public static void main(String[] args) {
         try {
             ServerSocket servidorSockets = new ServerSocket(PORTA);
-            arquivos=new Vector<File>();
+            nomesArquivos=new Vector<String>();
             while(true){
                 Socket socket = servidorSockets.accept();
                 new HandleClient(socket).start();
